@@ -8,6 +8,38 @@ export class Engine{
     private balances : Map<string, Balance> = new Map(); 
     private static instance: Engine;
     private constructor(){
+        this.fillDummyData()
+    }
+    static getInstance(){
+        if(!Engine.instance){
+            Engine.instance = new Engine();
+        }
+        return Engine.instance;
+    }
+    Process({message, clientId}: {
+        message: messageFromAPI,
+        clientId: string,
+    }){
+        const response = Object();
+        switch(message.Action){
+            case "CREATE_ORDER":
+                response.OrderId = (this.createOrder({...message.Data, clientId}))
+                break
+
+            case "CANCEL_ORDER":
+                this.cancelOrder({...message.Data, clientId});
+                break
+
+            case "GET_DEPTH":
+                const depth = this.getDepth(message.Data.symbol, clientId)
+                response.depth = depth
+                break
+        }
+        // console.log(this.orderBooks.get("TEST_INR"), this.balances);
+        return response
+
+    }
+    fillDummyData(){
         const TEST_INR_ORDERBOOK = new Orderbook("TEST");
         this.balances.set("1", {
             balance: {
@@ -61,36 +93,6 @@ export class Engine{
         })
         this.orderBooks.set("TEST_INR", TEST_INR_ORDERBOOK);
     }
-    static getInstance(){
-        if(!Engine.instance){
-            Engine.instance = new Engine();
-        }
-        return Engine.instance;
-    }
-    Process({message, clientId}: {
-        message: messageFromAPI,
-        clientId: string,
-    }){
-        const response = Object();
-        switch(message.Action){
-            case "CREATE_ORDER":
-                response.OrderId = (this.createOrder({...message.Data, clientId}))
-                break
-
-            case "CANCEL_ORDER":
-                this.cancelOrder({...message.Data, clientId});
-                break
-
-            case "GET_DEPTH":
-                const depth = this.getDepth(message.Data.symbol, clientId)
-                response.depth = depth
-                break
-        }
-        // console.log(this.orderBooks.get("TEST_INR"), this.balances);
-        return response
-
-    }
-
     createOrder({clientId, amount, quantity, side, symbol} : {
         clientId: string,
         amount: number,

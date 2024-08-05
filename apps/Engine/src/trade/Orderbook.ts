@@ -91,11 +91,9 @@ export class Orderbook {
                     clientId: compare_order.clientId,
                     completed: compare_order.quantity? false :  true
                 })
+
                 if (order.quantity === 0) {
                     break
-                }
-                if (compare_order.quantity === 0) {
-                    //logic
                 }
             }   
         }
