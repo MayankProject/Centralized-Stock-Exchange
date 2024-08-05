@@ -10,7 +10,6 @@ export type Balance = {
     },
     
 }
-
 export type messageFromAPI = { 
     Action: "CREATE_ORDER",
     Data : {
@@ -23,6 +22,11 @@ export type messageFromAPI = {
     Action : "CANCEL_ORDER",
     Data: {
         orderId: string,
+        symbol: string
+    }
+} | {
+    Action : "GET_DEPTH",
+    Data: {
         symbol: string
     }
 }

@@ -104,6 +104,46 @@ export class Orderbook {
             executedQuantity
         }
     }
+    getDepth(){
+        const depth : {
+            bids: [number, number][],
+            asks: [number, number][]
+        } = {
+            bids: [],
+            asks: []
+            // baseAssetVolume: this.bids.reduce((acc, order)=>acc+order.amount*order.quantity, 0),
+            // quoteAssetVolume: this.asks.reduce((acc, order)=>acc+order.amount*order.quantity, 0)
+        }
+        const sortedBids = this.bids.sort((a, b)=> a.amount - b.amount)
+        const sortedAsks = this.asks.sort((a, b)=> b.amount - a.amount)
+        let prev;
+        console.log(sortedAsks)
+        for (let id = 0; id < this.asks.length; id++) {
+            const ask = sortedAsks[id];
+            if (prev && prev.amount === ask.amount) {
+                depth.asks[id-1] = [depth.asks[id-1][0]+ask.quantity, depth.asks[id-1][1]];   
+                continue
+            }
+            depth.asks.push([
+                ask.quantity, ask.amount,
+            ])
+            prev = {...ask}
+        }
+        
+        prev = null;
+        for (let id = 0; id < this.bids.length; id++) {
+            const bid = sortedBids[id];
+            if (prev && prev.amount === bid.amount) {
+                depth.bids[id-1] = [depth.bids[id-1][0]+bid.quantity, depth.bids[id-1][1]];
+                continue
+            }
+            depth.bids.push([
+                bid.quantity, bid.amount,
+            ])
+            prev = {...bid}
+        }
+        return depth
+    }
     addToOrderBook(order: order, book: order[]){
         if (order.quantity) {
             book.push({

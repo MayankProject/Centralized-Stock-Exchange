@@ -2,13 +2,44 @@ import { Engine } from "../trade/Engine";
 import { describe, it, expect, beforeEach, should } from "vitest";
 import { side } from "../types";
 
-describe('Order Processing Tests', () => {
-    let cancelOrderId: string;
+function clearAllOrders(){
+    const orderBook = Engine.getInstance().getOrderBook("TEST_INR")
+    if (!orderBook) return
+    [...orderBook.bids].forEach((bid)=>{
+        console.log("object");
+        Engine.getInstance().Process({
+            clientId: bid.clientId,
+            message: {
+                Action: "CANCEL_ORDER",
+                Data: {
+                        orderId: bid.orderId,
+                        symbol: "TEST_INR"
+                    }
+            }
+        });
+     })
+    const allAsks = [...orderBook.asks]
+    allAsks.forEach((ask)=>{
+        Engine.getInstance().Process({
+            clientId: ask.clientId,
+            message: {
+                Action: "CANCEL_ORDER",
+                Data: {
+                        orderId: ask.orderId,
+                        symbol: "TEST_INR"
+                    }
+            }
+        });
+     })
+}
 
+
+
+describe('Order Processing Tests', () => {
     // Basic Orders Tests
     describe('Basic Orders', () => {
         it('should handle bid and ask orders correctly', () => {
-            cancelOrderId = Engine.getInstance().Process({
+            Engine.getInstance().Process({
                 clientId: "1",
                 message: {
                     Action: "CREATE_ORDER",
@@ -112,18 +143,8 @@ describe('Order Processing Tests', () => {
             expect(balances.get("1")?.balance.locked).toBe(370);
             expect(balances.get("1")?.["TEST"].available).toBe(30.6);
         });
-        
         it('should clear order', () => {
-            Engine.getInstance().Process({
-                clientId: "1",
-                message: {
-                    Action: "CANCEL_ORDER",
-                    Data: {
-                        orderId: cancelOrderId,
-                        symbol: "TEST_INR"
-                    }
-                }
-            });
+            clearAllOrders()
             const beforeClientBalance = Engine.getInstance().getBalance().get("4")?.balance
             const id = Engine.getInstance().Process({
                 clientId: "4",
@@ -136,7 +157,7 @@ describe('Order Processing Tests', () => {
                         symbol: "TEST_INR"
                     }
                 }
-            }) || "";
+            }).OrderId || "";
             Engine.getInstance().Process({
                 clientId: "4",
                 message: {
@@ -225,4 +246,70 @@ describe('Order Processing Tests', () => {
             expect(orderBook?.asks.length).toBe(1);
         });
     });
+
+
+    describe("Getting Depth", ()=>{
+        it("should clear all orders first", ()=>{
+            clearAllOrders()
+            expect(Engine.getInstance().getOrderBook("TEST_INR")?.bids.length).toBe(0)
+            expect(Engine.getInstance().getOrderBook("TEST_INR")?.asks.length).toBe(0)
+        })
+        
+        it('should add bulk orders from multiple users without triggering immediate trades', () => {
+        // Define bulk orders for users
+            const bulkOrders = [
+                { clientId: "3", amount: 2000, quantity: 0.8, side: "ask" as side },
+                { clientId: "4", amount: 1000, quantity: 0.8, side: "ask" as side },
+                { clientId: "3", amount: 1000, quantity: 1.4, side: "ask" as side },
+                { clientId: "4", amount: 900, quantity: 0.3, side: "ask" as side },
+                { clientId: "1", amount: 800, quantity: 1.3, side: "bid" as side },
+                { clientId: "1", amount: 750, quantity: 0.78, side: "bid" as side },
+                { clientId: "5", amount: 750, quantity: 2.8, side: "bid" as side },
+                { clientId: "2", amount: 700, quantity: 0.8, side: "bid" as side }
+            ];
+
+            // Add bid orders
+            bulkOrders.filter(order => order.side === "bid").forEach(order => {
+                Engine.getInstance().Process({
+                    clientId: order.clientId,
+                    message: {
+                        Action: "CREATE_ORDER",
+                        Data: {
+                            amount: order.amount,
+                            quantity: order.quantity,
+                            side: order.side,
+                            symbol: "TEST_INR"
+                        }
+                    }
+                });
+            });
+
+            // Add ask orders
+            bulkOrders.filter(order => order.side === "ask").forEach(order => {
+                Engine.getInstance().Process({
+                    clientId: order.clientId,
+                    message: {
+                        Action: "CREATE_ORDER",
+                        Data: {
+                            amount: order.amount,
+                            quantity: order.quantity,
+                            side: order.side,
+                            symbol: "TEST_INR"
+                        }
+                    }
+                });
+            });
+        })
+        it("should get depth", ()=>{
+            expect(Engine.getInstance().Process({
+                clientId: "1",
+                message: {
+                    Action: "GET_DEPTH",
+                    Data: {
+                        symbol: "TEST_INR"
+                    }
+                }
+            }).depth).toBeTypeOf(typeof {bids: [[Number, Number]], asks: [[Number, Number]]})
+        })  
+    })
 });

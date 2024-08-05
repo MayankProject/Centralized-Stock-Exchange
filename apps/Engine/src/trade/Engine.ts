@@ -71,15 +71,23 @@ export class Engine{
         message: messageFromAPI,
         clientId: string,
     }){
+        const response = Object();
         switch(message.Action){
             case "CREATE_ORDER":
-                return (this.createOrder({...message.Data, clientId}))
+                response.OrderId = (this.createOrder({...message.Data, clientId}))
                 break
+
             case "CANCEL_ORDER":
                 this.cancelOrder({...message.Data, clientId});
                 break
+
+            case "GET_DEPTH":
+                const depth = this.getDepth(message.Data.symbol, clientId)
+                response.depth = depth
+                break
         }
-        console.log(this.orderBooks.get("TEST_INR"), this.balances);
+        // console.log(this.orderBooks.get("TEST_INR"), this.balances);
+        return response
 
     }
 
@@ -176,7 +184,12 @@ export class Engine{
                 this.UnlockAsset(User, symbol.split("_")[0], order.quantity, clientId)
                 break
         }
+    }
 
+    getDepth(symbol: string, clientId: string){
+        const orderbook = this.orderBooks.get(symbol)
+        const depth = orderbook?.getDepth()
+        return depth
     }
 
     getOrderBook(symbol: string){
