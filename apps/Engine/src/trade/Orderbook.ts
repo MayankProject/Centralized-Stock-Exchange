@@ -14,10 +14,8 @@ export class Orderbook {
         this.symbol = `${baseAsset}_${this.quoteAsset}`
     }
     createOrder( order : order & {side: side}) : {fills: fill[], executedQuantity: number}{
-
         const {fills, executedQuantity} = this.matchOrder({...order})
         //Adding to OrderBook if not completely executed
-
         if (executedQuantity <  order.quantity) {
             switch (order.side) {
                 case "bid":

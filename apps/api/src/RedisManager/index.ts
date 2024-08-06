@@ -1,19 +1,31 @@
 import { messageFromAPI, requestPayload } from "@repo/types"
 import { createClient, RedisClientType } from "redis"
 export default class RedisManager{
-    private static instance: RedisClientType;
+
+    private publisher: RedisClientType;
+    private client: RedisClientType;
+    private static instance: RedisManager;
     private constructor(){
-        RedisManager.instance = createClient();
+        this.client = createClient();
+        this.publisher = createClient();
+        this.client.connect()
+        this.publisher.connect()
     }
     static getInstance(){
-        if(!RedisManager.instance){
-            RedisManager.instance = createClient();
+    if(!this.instance){
+            this.instance = new RedisManager();
         }
-        return RedisManager.instance;
+        return this.instance;
     }
-    static pushAndWait(payload : Omit<requestPayload, "id">){
+    async pushAndWait(payload : Omit<requestPayload, "id">){
         const id = Math.random().toString()
         const updatedPayload : requestPayload = {...payload, id}
-        RedisManager.instance.lPush("Process", JSON.stringify(updatedPayload))
+        this.publisher.lPush("Process", JSON.stringify(updatedPayload))
+        return new Promise((resolve)=>{
+            this.client.subscribe(id, (message, channel)=>{
+                this.client.unsubscribe(id)
+                resolve(JSON.parse(message))
+            })
+        })
     }
 }

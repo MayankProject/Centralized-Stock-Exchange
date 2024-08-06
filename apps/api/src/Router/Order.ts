@@ -14,6 +14,7 @@ const redis = RedisManager.getInstance()
 //       "clientId": "1"
 // }
 
+
 orderRouter.post("/", async (req, res)=>{
     const {side, amount, quantity, symbol, clientId} = req.body
     const payload: Omit<requestPayload, "id"> = {
@@ -25,8 +26,8 @@ orderRouter.post("/", async (req, res)=>{
         },
         clientId
     }
-    const response = await RedisManager.pushAndWait(payload)
-    res.json("Done!")
+    const response = await redis.pushAndWait(payload)
+    res.json(response)
 })
 orderRouter.delete("/", async (req, res)=>{
     const {orderId, symbol, clientId} = req.body
@@ -39,6 +40,6 @@ orderRouter.delete("/", async (req, res)=>{
         },
         clientId
     }
-    const response = RedisManager.pushAndWait(payload)
-    res.json("Done!")
+    const response = await redis.pushAndWait(payload)
+    res.json(response)
 })

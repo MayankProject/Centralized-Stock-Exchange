@@ -20,6 +20,6 @@ depthRouter.get("/", async (req, res)=>{
         },
         clientId
     }
-    const response = await RedisManager.pushAndWait(payload)
-    res.json("Done!")
+    const response = await redis.pushAndWait(payload)
+    res.json(response)
 })

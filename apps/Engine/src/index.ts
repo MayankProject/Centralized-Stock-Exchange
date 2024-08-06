@@ -1,27 +1,18 @@
 import { Engine } from "./trade/Engine";
 import RedisManager from "./RedisManager";
 import { RedisClientType } from "redis";
+import { requestPayload } from "@repo/types";
 
-const client: RedisClientType = RedisManager.getInstance()
 const engine = Engine.getInstance()
 async function submitProcesses(){ 
+    const redis: RedisManager = await RedisManager.getInstance()
     while(1){
-        console.log("-------");
-        const Process: {
-            key: string,
-            element: string
-        } = await client.brPop("Process", 0) || {
-            key: "",
-            element: ""
-        } 
-        console.log("-------");
-        console.log(Process.element);
-        await engine.Process(JSON.parse(Process.element))
+        const Payload: requestPayload = await redis.getFromQueue()
+        const response = await engine.Process(Payload)
+        if (Payload.id) {
+            redis.publishToAPI(Payload.id, JSON.stringify(response))
+        }
     }
 }
 
-async function start(){
-    await client.connect()
-    submitProcesses()
-} 
-start()
+submitProcesses()

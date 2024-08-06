@@ -20,7 +20,6 @@ app.use("/depth", depthRouter)
 
 // todo: store request somewhere which came while server was preparing 
 async function start(){
-    await redis.connect()
     app.listen(3000, ()=>{
         console.log("API Server ready.");
     })

@@ -15,10 +15,10 @@ export class Engine{
         return Engine.instance;
     }
     Process({message, clientId}: requestPayload){
-        const response = Object();
+        let response = Object();
         switch(message.Action){
             case "CREATE_ORDER":
-                response.OrderId = (this.createOrder({...message.Data, clientId}))
+                response = (this.createOrder({...message.Data, clientId}))
                 break
 
             case "CANCEL_ORDER":
@@ -27,11 +27,9 @@ export class Engine{
 
             case "GET_DEPTH":
                 const depth = this.getDepth(message.Data.symbol, clientId)
-                console.log(depth);
-                response.depth = depth
+                response = depth
                 break
         }
-        console.log(response.OrderId)
         // console.log(this.orderBooks.get("TEST_INR"), this.balances);
         return response
 
@@ -115,6 +113,7 @@ export class Engine{
             else {
                 this.lockAsset(User, Market, quantity, clientId)
             }
+
             const orderId = Math.random().toString()
 
             const {fills, executedQuantity} = orderBook.createOrder({
@@ -156,7 +155,14 @@ export class Engine{
                     }
                 })
             }
-            return orderId
+            return {
+                fills: fills.map((fill)=>{
+                    const { clientId, ...updated_fill} = fill
+                    return updated_fill
+                }),
+                executedQuantity,
+                orderId
+            }
         }
         else{
             throw new Error("Insufficient Balance")
@@ -168,9 +174,11 @@ export class Engine{
         symbol: string,
         clientId: string
     }){
+        console.log("object");
         const orderBook = this.orderBooks.get(symbol);
         if(!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
         const order : order & { side: side } = orderBook.cancelOrder(orderId)
+        console.log(order);
         const User = this.balances.get(order.clientId)
         if (!User) {
             throw new Error("No User Found!")

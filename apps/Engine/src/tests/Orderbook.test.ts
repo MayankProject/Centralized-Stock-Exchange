@@ -156,7 +156,7 @@ describe('Order Processing Tests', () => {
                         symbol: "TEST_INR"
                     }
                 }
-            }).OrderId || "";
+            }).orderId || "";
             Engine.getInstance().Process({
                 clientId: "4",
                 message: {
@@ -308,7 +308,7 @@ describe('Order Processing Tests', () => {
                         symbol: "TEST_INR"
                     }
                 }
-            }).depth).toBeTypeOf(typeof {bids: [[Number, Number]], asks: [[Number, Number]]})
+            })).toBeTypeOf(typeof {bids: [[Number, Number]], asks: [[Number, Number]]})
         })  
     })
 });
