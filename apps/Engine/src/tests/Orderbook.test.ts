@@ -1,12 +1,11 @@
 import { Engine } from "../trade/Engine";
 import { describe, it, expect, beforeEach, should } from "vitest";
-import { side } from "../types";
+import { side } from "@repo/types";
 
 function clearAllOrders(){
     const orderBook = Engine.getInstance().getOrderBook("TEST_INR")
     if (!orderBook) return
     [...orderBook.bids].forEach((bid)=>{
-        console.log("object");
         Engine.getInstance().Process({
             clientId: bid.clientId,
             message: {

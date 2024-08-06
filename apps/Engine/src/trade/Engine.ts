@@ -1,7 +1,5 @@
-import { Balance, messageFromAPI, side } from "../types";
 import { Orderbook, quoteAsset } from "./Orderbook";
-import { order } from "../types";
-// import Balance from "../types/index"
+import {messageFromAPI, Balance, side, order, requestPayload} from "@repo/types/index"
 
 export class Engine{ 
     private orderBooks: Map<string, Orderbook> = new Map()
@@ -16,10 +14,7 @@ export class Engine{
         }
         return Engine.instance;
     }
-    Process({message, clientId}: {
-        message: messageFromAPI,
-        clientId: string,
-    }){
+    Process({message, clientId}: requestPayload){
         const response = Object();
         switch(message.Action){
             case "CREATE_ORDER":
@@ -32,9 +27,11 @@ export class Engine{
 
             case "GET_DEPTH":
                 const depth = this.getDepth(message.Data.symbol, clientId)
+                console.log(depth);
                 response.depth = depth
                 break
         }
+        console.log(response.OrderId)
         // console.log(this.orderBooks.get("TEST_INR"), this.balances);
         return response
 

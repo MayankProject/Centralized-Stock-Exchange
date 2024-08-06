@@ -1,27 +1,27 @@
 import { Engine } from "./trade/Engine";
-import { side } from "./types";
+import RedisManager from "./RedisManager";
+import { RedisClientType } from "redis";
 
-Engine.getInstance().Process({
-    clientId: "1",
-    message: {
-        Action: "CREATE_ORDER",
-        Data: {
-            amount: 12,
-            quantity: 12,
-            side: "bid" as side,
-            symbol: "TEST_INR"
-        }
+const client: RedisClientType = RedisManager.getInstance()
+const engine = Engine.getInstance()
+async function submitProcesses(){ 
+    while(1){
+        console.log("-------");
+        const Process: {
+            key: string,
+            element: string
+        } = await client.brPop("Process", 0) || {
+            key: "",
+            element: ""
+        } 
+        console.log("-------");
+        console.log(Process.element);
+        await engine.Process(JSON.parse(Process.element))
     }
-})
-Engine.getInstance().Process({
-    clientId: "1",
-    message: {
-        Action: "CREATE_ORDER",
-        Data: {
-            amount: 12,
-            quantity: 12,
-            side: "bid" as side,
-            symbol: "TEST_INR"
-        }
-    }
-})
+}
+
+async function start(){
+    await client.connect()
+    submitProcesses()
+} 
+start()

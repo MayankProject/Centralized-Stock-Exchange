@@ -44,3 +44,9 @@ export type fill = {
     clientId: string,
     completed: boolean
 }
+
+export type requestPayload = {
+    message: messageFromAPI,
+    clientId: string,
+    id?: string
+}

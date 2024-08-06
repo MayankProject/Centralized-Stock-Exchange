@@ -1,4 +1,4 @@
-import { fill, order, side } from "../types";
+import { fill, order, side } from "@repo/types";
 
 export const quoteAsset = "INR"
 export class Orderbook {
@@ -115,7 +115,6 @@ export class Orderbook {
         const sortedBids = this.bids.sort((a, b)=> a.amount - b.amount)
         const sortedAsks = this.asks.sort((a, b)=> b.amount - a.amount)
         let prev;
-        console.log(sortedAsks)
         for (let id = 0; id < this.asks.length; id++) {
             const ask = sortedAsks[id];
             if (prev && prev.amount === ask.amount) {
