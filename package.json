@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "docker-compose up -d && turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
@@ -21,7 +21,9 @@
     "packages/*"
   ],
   "dependencies": {
+    "@types/ws": "^8.5.12",
     "redis": "^4.7.0",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "ws": "^8.17.1"
   }
 }

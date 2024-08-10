@@ -1,28 +1,28 @@
 import { Orderbook, quoteAsset } from "./Orderbook";
-import {messageFromAPI, Balance, side, order, requestPayload} from "@repo/types/index"
+import { Balance, side, order, requestPayload } from "@repo/types/index"
 
-export class Engine{ 
+export class Engine {
     private orderBooks: Map<string, Orderbook> = new Map()
-    private balances : Map<string, Balance> = new Map(); 
+    private balances: Map<string, Balance> = new Map();
     private static instance: Engine;
-    private constructor(){
+    private constructor() {
         this.fillDummyData()
     }
-    static getInstance(){
-        if(!Engine.instance){
+    static getInstance() {
+        if (!Engine.instance) {
             Engine.instance = new Engine();
         }
         return Engine.instance;
     }
-    Process({message, clientId}: requestPayload){
+    Process({ message, clientId }: requestPayload) {
         let response = Object();
-        switch(message.Action){
+        switch (message.Action) {
             case "CREATE_ORDER":
-                response = (this.createOrder({...message.Data, clientId}))
+                response = (this.createOrder({ ...message.Data, clientId }))
                 break
 
             case "CANCEL_ORDER":
-                this.cancelOrder({...message.Data, clientId});
+                this.cancelOrder({ ...message.Data, clientId });
                 break
 
             case "GET_DEPTH":
@@ -34,7 +34,7 @@ export class Engine{
         return response
 
     }
-    fillDummyData(){
+    fillDummyData() {
         const TEST_INR_ORDERBOOK = new Orderbook("TEST");
         this.balances.set("1", {
             balance: {
@@ -88,26 +88,26 @@ export class Engine{
         })
         this.orderBooks.set("TEST_INR", TEST_INR_ORDERBOOK);
     }
-    createOrder({clientId, amount, quantity, side, symbol} : {
+    createOrder({ clientId, amount, quantity, side, symbol }: {
         clientId: string,
         amount: number,
         quantity: number,
         side: side,
         symbol: string // TEST_INR
-    }){
+    }) {
         const orderBook = this.orderBooks.get(symbol);
-        if(!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
+        if (!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
 
         const User = this.balances.get(clientId)
         if (!User) throw new Error("No User Found!")
 
-        const priceToBuy = amount*quantity
+        const priceToBuy = amount * quantity
         const Market = symbol.split("_")[0]
 
-        if (((side === "bid" && User.balance.available || 0) >= priceToBuy) ||(side ==="ask" && this.balances.get(clientId)?.[symbol.split("_")[0]].available || 0 >= quantity)) {
+        if (((side === "bid" && User.balance.available || 0) >= priceToBuy) || (side === "ask" && this.balances.get(clientId)?.[symbol.split("_")[0]].available || 0 >= quantity)) {
 
             // Locking Balances
-            if (side ==="bid") {
+            if (side === "bid") {
                 this.lockBalance(User, priceToBuy, clientId)
             }
             else {
@@ -116,7 +116,7 @@ export class Engine{
 
             const orderId = Math.random().toString()
 
-            const {fills, executedQuantity} = orderBook.createOrder({
+            const { fills, executedQuantity } = orderBook.createOrder({
                 orderId,
                 amount,
                 quantity,
@@ -124,10 +124,10 @@ export class Engine{
                 clientId,
             })
             if (side == "bid") {
-                User.balance.locked -= executedQuantity*amount;
+                User.balance.locked -= executedQuantity * amount;
                 User[symbol.split("_")[0] as string].available += executedQuantity
                 this.balances.set(clientId, User)
-                fills.forEach((fill)=>{
+                fills.forEach((fill) => {
                     const User = this.balances.get(fill.clientId)
                     if (fill.completed) {
                         orderBook.removeOrder(fill.orderId, "ask")
@@ -139,11 +139,11 @@ export class Engine{
                     }
                 })
             }
-            else{
-                User.balance.available += executedQuantity*amount;
+            else {
+                User.balance.available += executedQuantity * amount;
                 User[symbol.split("_")[0] as string].locked -= executedQuantity
                 this.balances.set(clientId, User)
-                fills.forEach((fill)=>{
+                fills.forEach((fill) => {
                     const User = this.balances.get(fill.clientId)
                     if (fill.completed) {
                         orderBook.removeOrder(fill.orderId, "bid")
@@ -156,36 +156,36 @@ export class Engine{
                 })
             }
             return {
-                fills: fills.map((fill)=>{
-                    const { clientId, ...updated_fill} = fill
+                fills: fills.map((fill) => {
+                    const { clientId, ...updated_fill } = fill
                     return updated_fill
                 }),
                 executedQuantity,
                 orderId
             }
         }
-        else{
+        else {
             throw new Error("Insufficient Balance")
         }
     }
 
-    cancelOrder({orderId, symbol, clientId} : {
+    cancelOrder({ orderId, symbol, clientId }: {
         orderId: string,
         symbol: string,
         clientId: string
-    }){
+    }) {
         console.log("object");
         const orderBook = this.orderBooks.get(symbol);
-        if(!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
-        const order : order & { side: side } = orderBook.cancelOrder(orderId)
+        if (!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
+        const order: order & { side: side } = orderBook.cancelOrder(orderId)
         console.log(order);
         const User = this.balances.get(order.clientId)
         if (!User) {
             throw new Error("No User Found!")
         }
-        switch(order.side){
+        switch (order.side) {
             case "bid":
-                this.UnlockBalance(User, order.amount*order.quantity, clientId)
+                this.UnlockBalance(User, order.amount * order.quantity, clientId)
                 break
             case "ask":
                 this.UnlockAsset(User, symbol.split("_")[0], order.quantity, clientId)
@@ -193,35 +193,35 @@ export class Engine{
         }
     }
 
-    getDepth(symbol: string, clientId: string){
+    getDepth(symbol: string, clientId: string) {
         const orderbook = this.orderBooks.get(symbol)
         const depth = orderbook?.getDepth()
         return depth
     }
 
-    getOrderBook(symbol: string){
+    getOrderBook(symbol: string) {
         return this.orderBooks.get(symbol)
     }
-    getBalance(){
+    getBalance() {
         return this.balances
     }
 
-    lockBalance(User : Balance, Amount: number, clientId: string){
+    lockBalance(User: Balance, Amount: number, clientId: string) {
         User.balance.available -= Amount
         User.balance.locked += Amount
         this.balances.set(clientId, User)
     }
-    UnlockBalance(User : Balance, Amount: number, clientId: string){
+    UnlockBalance(User: Balance, Amount: number, clientId: string) {
         User.balance.available += Amount
         User.balance.locked -= Amount
         this.balances.set(clientId, User)
     }
-    lockAsset(User : Balance, Market: string, Amount: number, clientId: string){
+    lockAsset(User: Balance, Market: string, Amount: number, clientId: string) {
         User[Market].available -= Amount
         User[Market].locked += Amount
         this.balances.set(clientId, User)
     }
-    UnlockAsset(User : Balance, Market: string, Amount: number, clientId: string){
+    UnlockAsset(User: Balance, Market: string, Amount: number, clientId: string) {
         User[Market].available += Amount
         User[Market].locked -= Amount
         this.balances.set(clientId, User)

@@ -1,11 +1,9 @@
 import express from "express"
 import cors from "cors"
-import RedisManager from "./RedisManager"
 import { orderRouter } from "./Router/Order"
 import { depthRouter } from "./Router/Depth"
 
 const app = express()
-const redis = RedisManager.getInstance()
 
 app.use(cors())
 app.use(express.json())
