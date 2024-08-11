@@ -1,4 +1,5 @@
-import { Orderbook, quoteAsset } from "./Orderbook";
+import RedisManager from "../RedisManager";
+import { Orderbook, quoteAsset, updatedDepthParams } from "./Orderbook";
 import { Balance, side, order, requestPayload } from "@repo/types/index"
 
 export class Engine {
@@ -23,6 +24,9 @@ export class Engine {
 
             case "CANCEL_ORDER":
                 this.cancelOrder({ ...message.Data, clientId });
+                response = {
+                    message: "Order Cancelled"
+                }
                 break
 
             case "GET_DEPTH":
@@ -116,7 +120,7 @@ export class Engine {
 
             const orderId = Math.random().toString()
 
-            const { fills, executedQuantity } = orderBook.createOrder({
+            const { fills, executedQuantity, updatedDepthParams } = orderBook.createOrder({
                 orderId,
                 amount,
                 quantity,
@@ -155,6 +159,9 @@ export class Engine {
                     }
                 })
             }
+            // logic to send data here and there
+            updatedDepthParams.s = symbol
+            this.publishUpdatedDepth(`trade@${symbol}`, updatedDepthParams)
             return {
                 fills: fills.map((fill) => {
                     const { clientId, ...updated_fill } = fill
@@ -169,16 +176,38 @@ export class Engine {
         }
     }
 
+    publishUpdatedDepth(stream: string, updatedDepthParams: updatedDepthParams) {
+        // problem => bids: [[100, 0], [100, 0]]
+        const accumulatedData: { bids: { [key: number]: number }, asks: { [key: number]: number } } = {
+            bids: {},
+            asks: {}
+        }
+        updatedDepthParams.asks.forEach((ask) => {
+            if (!accumulatedData.asks[ask[0]]) {
+                accumulatedData.asks[ask[0]] = 0
+            }
+            accumulatedData.asks[ask[0]] += ask[1]
+        })
+        updatedDepthParams.bids.forEach((bid) => {
+            if (!accumulatedData.bids[bid[0]]) {
+                accumulatedData.bids[bid[0]] = 0
+            }
+            accumulatedData.bids[bid[0]] += bid[1]
+        })
+        const bids = Object.entries(accumulatedData.bids).map(arr => [Number(arr[0]), arr[1]])
+        const asks = Object.entries(accumulatedData.asks).map(arr => [Number(arr[0]), arr[1]])
+
+        RedisManager.getInstance().publishToWs(stream, { ...updatedDepthParams, bids, asks })
+    }
+
     cancelOrder({ orderId, symbol, clientId }: {
         orderId: string,
         symbol: string,
         clientId: string
     }) {
-        console.log("object");
         const orderBook = this.orderBooks.get(symbol);
         if (!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
         const order: order & { side: side } = orderBook.cancelOrder(orderId)
-        console.log(order);
         const User = this.balances.get(order.clientId)
         if (!User) {
             throw new Error("No User Found!")

@@ -1,29 +1,26 @@
 import { requestPayload } from "@repo/types";
 import { createClient, RedisClientType } from "redis"
 
-export default class RedisManager{
+export default class RedisManager {
     private client: RedisClientType;
-    private publisher : RedisClientType;
+    private publisher: RedisClientType;
     private static instance: RedisManager;
-    private constructor(){
+    private constructor() {
         this.client = createClient();
         this.publisher = createClient();
+        this.client.connect()
+        this.publisher.connect()
     }
-    async connectToRedis(){
-        await this.client.connect()
-        await this.publisher.connect()
-    }
-    static async getInstance(){
-        if(!RedisManager.instance){
+    static getInstance() {
+        if (!RedisManager.instance) {
             const instance = new RedisManager()
             RedisManager.instance = instance;
-            await instance.connectToRedis()
         }
         return RedisManager.instance;
     }
-    async getFromQueue() : Promise<requestPayload>{
-        return new Promise((resolve)=>{
-            this.client.brPop("Process", 0).then((response)=>{
+    async getFromQueue(): Promise<requestPayload> {
+        return new Promise((resolve) => {
+            this.client.brPop("Process", 0).then((response) => {
                 if (!response) {
                     throw new Error("No Response!")
                 }
@@ -32,7 +29,10 @@ export default class RedisManager{
         })
     }
     // Todo: Typecasing for sending to api back
-    publishToAPI(id: string, payload: any){
+    publishToAPI(id: string, payload: any) {
         this.publisher.publish(id, payload)
+    }
+    publishToWs(stream: string, message: any) {
+        this.publisher.publish(stream, JSON.stringify(message))
     }
 }

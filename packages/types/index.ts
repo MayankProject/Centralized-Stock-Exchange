@@ -1,4 +1,4 @@
-export type side = "bid" | "ask" 
+export type side = "bid" | "ask"
 export type Balance = {
     balance: {
         available: number,
@@ -8,24 +8,24 @@ export type Balance = {
         available: number,
         locked: number
     },
-    
+
 }
-export type messageFromAPI = { 
+export type messageFromAPI = {
     Action: "CREATE_ORDER",
-    Data : {
+    Data: {
         side: side,
         amount: number,
         quantity: number,
         symbol: string
     }
 } | {
-    Action : "CANCEL_ORDER",
+    Action: "CANCEL_ORDER",
     Data: {
         orderId: string,
         symbol: string
     }
 } | {
-    Action : "GET_DEPTH",
+    Action: "GET_DEPTH",
     Data: {
         symbol: string
     }

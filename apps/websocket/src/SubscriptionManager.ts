@@ -4,7 +4,6 @@ export class SubscriptionManager {
         private static instance: SubscriptionManager
         private Subscriptions = new Map<string, WebSocket[]> // stream -> User 
         private reverseSubscription = new Map<WebSocket, string[]> // User -> stream
-        private socketToId = new Map<WebSocket, string>
         private client = RedisManager.getInstance()
         private constructor() {
         }

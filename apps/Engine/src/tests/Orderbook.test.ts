@@ -2,34 +2,34 @@ import { Engine } from "../trade/Engine";
 import { describe, it, expect, beforeEach, should } from "vitest";
 import { side } from "@repo/types";
 
-function clearAllOrders(){
+function clearAllOrders() {
     const orderBook = Engine.getInstance().getOrderBook("TEST_INR")
     if (!orderBook) return
-    [...orderBook.bids].forEach((bid)=>{
+    [...orderBook.bids].forEach((bid) => {
         Engine.getInstance().Process({
             clientId: bid.clientId,
             message: {
                 Action: "CANCEL_ORDER",
                 Data: {
-                        orderId: bid.orderId,
-                        symbol: "TEST_INR"
-                    }
+                    orderId: bid.orderId,
+                    symbol: "TEST_INR"
+                }
             }
         });
-     })
+    })
     const allAsks = [...orderBook.asks]
-    allAsks.forEach((ask)=>{
+    allAsks.forEach((ask) => {
         Engine.getInstance().Process({
             clientId: ask.clientId,
             message: {
                 Action: "CANCEL_ORDER",
                 Data: {
-                        orderId: ask.orderId,
-                        symbol: "TEST_INR"
-                    }
+                    orderId: ask.orderId,
+                    symbol: "TEST_INR"
+                }
             }
         });
-     })
+    })
 }
 
 
@@ -113,7 +113,7 @@ describe('Order Processing Tests', () => {
 
             expect(balances.get("3")?.balance.available).toBe(3450);
             expect(balances.get("3")?.["TEST"].available).toBe(10.5);
-            
+
             expect(balances.get("1")?.balance.available).toBe(5100);
             expect(balances.get("1")?.balance.locked).toBe(450);
             expect(balances.get("1")?.["TEST"].available).toBe(30.5);
@@ -169,7 +169,7 @@ describe('Order Processing Tests', () => {
             });
             expect(Engine.getInstance().getBalance().get("4")?.balance).toBe(beforeClientBalance)
         });
-        
+
 
         it('should handle a partially filled order with executed amount', () => {
             Engine.getInstance().Process({
@@ -247,15 +247,15 @@ describe('Order Processing Tests', () => {
     });
 
 
-    describe("Getting Depth", ()=>{
-        it("should clear all orders first", ()=>{
+    describe("Getting Depth", () => {
+        it("should clear all orders first", () => {
             clearAllOrders()
             expect(Engine.getInstance().getOrderBook("TEST_INR")?.bids.length).toBe(0)
             expect(Engine.getInstance().getOrderBook("TEST_INR")?.asks.length).toBe(0)
         })
-        
+
         it('should add bulk orders from multiple users without triggering immediate trades', () => {
-        // Define bulk orders for users
+            // Define bulk orders for users
             const bulkOrders = [
                 { clientId: "3", amount: 2000, quantity: 0.8, side: "ask" as side },
                 { clientId: "4", amount: 1000, quantity: 0.8, side: "ask" as side },
@@ -299,7 +299,7 @@ describe('Order Processing Tests', () => {
                 });
             });
         })
-        it("should get depth", ()=>{
+        it("should get depth", () => {
             expect(Engine.getInstance().Process({
                 clientId: "1",
                 message: {
@@ -308,7 +308,41 @@ describe('Order Processing Tests', () => {
                         symbol: "TEST_INR"
                     }
                 }
-            })).toBeTypeOf(typeof {bids: [[Number, Number]], asks: [[Number, Number]]})
-        })  
+            })).toBeTypeOf(typeof { bids: [[Number, Number]], asks: [[Number, Number]] })
+        })
+    })
+    describe("Checking Depth Update", () => {
+        it("should clear all orders first", () => {
+            clearAllOrders()
+            expect(Engine.getInstance().getOrderBook("TEST_INR")?.bids.length).toBe(0)
+            expect(Engine.getInstance().getOrderBook("TEST_INR")?.asks.length).toBe(0)
+        })
+        it("Getting Depth Update", () => {
+            Engine.getInstance().Process({
+                clientId: "4",
+                message: {
+                    Action: "CREATE_ORDER",
+                    Data: {
+                        amount: 1000,
+                        quantity: 1,
+                        side: "ask" as side,
+                        symbol: "TEST_INR"
+                    }
+                }
+            });
+            Engine.getInstance().Process({
+                clientId: "5",
+                message: {
+                    Action: "CREATE_ORDER",
+                    Data: {
+                        amount: 1000,
+                        quantity: 2,
+                        side: "bid" as side,
+                        symbol: "TEST_INR"
+                    }
+                }
+            });
+
+        })
     })
 });
