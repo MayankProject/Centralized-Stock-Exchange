@@ -30,11 +30,10 @@ export class Engine {
                 break
 
             case "GET_DEPTH":
-                const depth = this.getDepth(message.Data.symbol, clientId)
+                const depth = this.getDepth(message.Data.symbol)
                 response = depth
                 break
         }
-        // console.log(this.orderBooks.get("TEST_INR"), this.balances);
         return response
 
     }
@@ -162,6 +161,7 @@ export class Engine {
             // logic to send data here and there
             updatedDepthParams.s = symbol
             this.publishUpdatedDepth(`trade@${symbol}`, updatedDepthParams)
+            // TODO:  Have to register trades and publish to Pub Sub
             return {
                 fills: fills.map((fill) => {
                     const { clientId, ...updated_fill } = fill
