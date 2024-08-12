@@ -212,17 +212,24 @@ export class Engine {
         if (!User) {
             throw new Error("No User Found!")
         }
+        let accumulatedAvailableQuantity
+        const updatedDepthParams: updatedDepthParams = { e: "DEPTH", s: symbol, bids: [], asks: [] }
         switch (order.side) {
             case "bid":
+                accumulatedAvailableQuantity = orderBook.bids.filter(e => e.amount === order.amount).reduce((sum, next) => sum + next.quantity, 0)
+                updatedDepthParams.bids.push([order.amount, accumulatedAvailableQuantity])
                 this.UnlockBalance(User, order.amount * order.quantity, clientId)
                 break
             case "ask":
+                accumulatedAvailableQuantity = orderBook.asks.filter(e => e.amount === order.amount).reduce((sum, next) => sum + next.quantity, 0)
+                updatedDepthParams.asks.push([order.amount, accumulatedAvailableQuantity])
                 this.UnlockAsset(User, symbol.split("_")[0], order.quantity, clientId)
                 break
         }
+        this.publishUpdatedDepth(`trade@${symbol}`, updatedDepthParams)
     }
 
-    getDepth(symbol: string, clientId: string) {
+    getDepth(symbol: string) {
         const orderbook = this.orderBooks.get(symbol)
         const depth = orderbook?.getDepth()
         return depth
