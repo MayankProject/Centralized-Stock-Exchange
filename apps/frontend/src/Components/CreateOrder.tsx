@@ -1,12 +1,17 @@
+import { useState } from "react"
 export default function() {
+    const [Tab, setTab] = useState<"Buy" | "Sell">("Buy")
+    function changeTab() {
+        setTab(Tab === "Buy" ? "Sell" : "Buy")
+    }
     return (
-        <div className="w-[25%] h-full pb-3">
+        <div className="w-[25%] h-full pb-3 border-l border-gray-800">
             <div className="border-b border-gray-800">
                 <div className="flex h-[65px]">
-                    <div className="w-[50%] bg-[#0d1d1b] text-[#02a166] h-full flex justify-center items-center">
+                    <div onClick={changeTab} className={`w-[50%] cursor-pointer ${Tab === "Buy" && "bg-[#0d1d1b]"} text-[#02a166] h-full flex justify-center items-center`}>
                         Buy
                     </div>
-                    <div className="w-[50%] bg-[#291419] text-[#f3484b] h-full flex justify-center items-center">
+                    <div onClick={changeTab} className={`w-[50%] cursor-pointer ${Tab === "Sell" && "bg-[#291419]"} text-[#f3484b] h-full flex justify-center items-center`}>
                         Sell
                     </div>
                 </div>
@@ -38,7 +43,13 @@ export default function() {
                         <input type="text" className="rounded-lg w-full text-sm h-10 p-3 max-w-[100%] text-white outline-none my-2 bg-transparent border-2 border-[#202127]" />
                     </div>
                 </div>
-                <button className="font-semibold w-full bg-[#02a166] px-2 focus:ring-blue-200 focus:none focus:outline-none hover:opacity-90 py-3 disabled:opacity-80 disabled:hover:opacity-80 text-center h-12 rounded-xl text-base ">Trade</button>
+                {
+                    Tab === "Buy" ?
+
+                        <button className="font-semibold w-full bg-[#02a166] px-2 focus:ring-blue-200 focus:none focus:outline-none hover:opacity-90 py-3 disabled:opacity-80 disabled:hover:opacity-80 text-center h-12 rounded-xl text-base ">Buy</button> :
+
+                        <button className="font-semibold w-full bg-[#f3484b] px-2 focus:ring-blue-200 focus:none focus:outline-none hover:opacity-90 py-3 disabled:opacity-80 disabled:hover:opacity-80 text-center h-12 rounded-xl text-base ">Sell</button>
+                }
             </div>
         </div>
 
