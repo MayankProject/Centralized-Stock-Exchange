@@ -1,9 +1,14 @@
 import { DepthResponse, TradeApiResponse } from "@repo/types";
 import { atom, GetRecoilValue, selector } from "recoil";
 import { getDepth } from "../utils";
-export const user = atom<string>({
+export const user = atom<{
+	id: string, balance: number
+}>({
 	key: 'textState', // unique ID (with respect to other atoms/selectors)
-	default: String(1), // default value (aka initial value)
+	default: {
+		id: "1",
+		balance: 1000,
+	},
 });
 export const symbol = atom<string>({
 	key: "symbol",
@@ -12,7 +17,7 @@ export const symbol = atom<string>({
 const DepthData = selector({
 	key: "Depth Data",
 	get: async ({ get }: { get: GetRecoilValue }) => {
-		const response = await getDepth(get(user), get(symbol))
+		const response = await getDepth(get(user).id, get(symbol))
 		return (response.data)
 	},
 	dangerouslyAllowMutability: true

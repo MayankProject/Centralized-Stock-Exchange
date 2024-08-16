@@ -83,10 +83,14 @@ export default function() {
         return () => {
             WebSocketManager.getInstance().sendMessage({
                 method: "UNSUBSCRIBE",
+                params: [`trade@${_symbol}`]
+            })
+            WebSocketManager.getInstance().sendMessage({
+                method: "UNSUBSCRIBE",
                 params: [`depth@${_symbol}`]
             })
         }
-    }, [])
+    }, [symbol])
 
     return (
         <div className= "flex h-full" >

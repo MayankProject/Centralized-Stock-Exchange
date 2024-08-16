@@ -132,30 +132,26 @@ export class Orderbook {
                 }
                 const sortedBids = data?.bids || this.bids.sort((a, b) => b.amount - a.amount)
                 const sortedAsks = data?.asks || this.asks.sort((a, b) => a.amount - b.amount)
-                let prev;
                 if (sortedAsks.length) for (let id = 0; id < sortedAsks.length; id++) {
                         const ask = sortedAsks[id];
-                        if (prev && prev.amount === ask.amount) {
-                                depth.asks[id - 1] = [depth.asks[depth.asks.length - 1][0], depth.asks[depth.asks.length - 1][1] + ask.quantity];
+                        if (depth.asks.length && depth.asks[depth.asks.length - 1][0] === ask.amount) {
+                                depth.asks[depth.asks.length - 1] = [depth.asks[depth.asks.length - 1][0], depth.asks[depth.asks.length - 1][1] + ask.quantity];
                                 continue
                         }
                         depth.asks.push([
                                 ask.amount, ask.quantity
                         ])
-                        prev = { ...ask }
                 }
 
-                prev = null;
                 if (sortedBids.length) for (let id = 0; id < sortedBids.length; id++) {
                         const bid = sortedBids[id];
-                        if (prev && prev.amount === bid.amount) {
-                                depth.bids[id - 1] = [depth.bids[depth.bids.length - 1][0], depth.bids[depth.bids.length - 1][1] + bid.quantity];
+                        if (depth.bids.length && depth.bids[depth.bids.length - 1][0] === bid.amount) {
+                                depth.bids[depth.bids.length - 1] = [depth.bids[depth.bids.length - 1][0], depth.bids[depth.bids.length - 1][1] + bid.quantity];
                                 continue
                         }
                         depth.bids.push([
                                 bid.amount, bid.quantity
                         ])
-                        prev = { ...bid }
                 }
                 return depth
         }

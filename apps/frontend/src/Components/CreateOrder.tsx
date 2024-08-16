@@ -7,11 +7,12 @@ export default function() {
     const [Tab, setTab] = useState<"Buy" | "Sell">("Buy")
     const [quantity, setQuantity] = useState<number>(0)
     const [amount, setAmount] = useState<number>(0)
-    const clientId = useRecoilValue(user)
+    const { id } = useRecoilValue(user)
     const _symbol = useRecoilValue(symbol)
     function makeOrder() {
+        console.log(id)
         const payload: createOrderAPI = {
-            clientId,
+            clientId: id,
             symbol: _symbol,
             side: Tab === "Buy" ? "bid" : "ask",
             quantity,

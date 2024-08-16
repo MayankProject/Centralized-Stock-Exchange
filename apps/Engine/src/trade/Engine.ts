@@ -190,10 +190,11 @@ export class Engine {
             this.publishUpdatedDepth(`depth@${symbol}`, updatedDepthParams)
 
             if (fills.length) {
+                console.log(fills)
                 const tradeStreamData: TradeStreamResponse = {
                     e: "TRADE",
                     s: symbol,
-                    p: String(fills.reduce((sum, fill) => sum + fill.price, 0)),
+                    p: String(fills.reduce((sum, fill) => sum + fill.price * fill.quantity, 0)),
                     q: String(executedQuantity)
                 }
                 this.publishToTrade(`trade@${symbol}`, tradeStreamData)
