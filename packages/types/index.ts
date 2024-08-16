@@ -50,6 +50,17 @@ export type requestPayload = {
     clientId: string,
     id?: string
 }
+export type Trade = {
+    amount: string,
+    quantity: string
+}
+export type TradeApiResponse = Trade[]
+export type TradeStreamResponse = {
+    e: "TRADE",
+    s: string,
+    p: string,
+    q: string
+}
 export type DepthResponse = {
     e: "DEPTH",
     s: string,

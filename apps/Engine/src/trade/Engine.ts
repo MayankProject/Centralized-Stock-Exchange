@@ -1,6 +1,6 @@
 import RedisManager from "../RedisManager";
 import { Orderbook, quoteAsset } from "./Orderbook";
-import { Balance, side, order, requestPayload, DepthResponse, OrderResponse } from "@repo/types/index"
+import { Balance, side, order, requestPayload, DepthResponse, OrderResponse, TradeStreamResponse } from "@repo/types/index"
 
 export class Engine {
     private orderBooks: Map<string, Orderbook> = new Map()
@@ -185,9 +185,20 @@ export class Engine {
                 })
             }
             // logic to send data here and there
+            //
             updatedDepthParams.s = symbol
             this.publishUpdatedDepth(`depth@${symbol}`, updatedDepthParams)
-            // TODO:  Have to register trades and publish to Pub Sub
+
+            if (fills.length) {
+                const tradeStreamData: TradeStreamResponse = {
+                    e: "TRADE",
+                    s: symbol,
+                    p: String(fills.reduce((sum, fill) => sum + fill.price, 0)),
+                    q: String(executedQuantity)
+                }
+                this.publishToTrade(`trade@${symbol}`, tradeStreamData)
+            }
+
             return {
                 fills: fills.map((fill) => {
                     const { clientId, ...updated_fill } = fill
@@ -201,7 +212,10 @@ export class Engine {
             throw new Error("Insufficient Balance")
         }
     }
-
+    publishToTrade(stream: string, data: TradeStreamResponse) {
+        console.log(data)
+        RedisManager.getInstance().publishToWs(stream, data)
+    }
     publishUpdatedDepth(stream: string, updatedDepthParams: DepthResponse) {
         // problem => bids: [[100, 0], [100, 0]]
         const accumulatedData: { bids: { [key: number]: number }, asks: { [key: number]: number } } = {

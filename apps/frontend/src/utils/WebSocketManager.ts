@@ -29,11 +29,10 @@ export class WebSocketManager {
 		}
 		this.callbacks[stream] = [callback]
 	}
-	detachCallback(stream: string, callback: () => void) {
+	detachCallback(stream: string, callback: (data: any) => void) {
 		this.callbacks[stream] = this.callbacks[stream].filter(call => call !== callback)
 	}
 	handleIncomingData(data: any) {
-		console.log(data)
 		if (this.callbacks[data.e]) {
 			this.callbacks[data.e].forEach((callback) => {
 				callback(data)
@@ -42,12 +41,12 @@ export class WebSocketManager {
 	}
 	init() {
 		this.socket.onopen = () => {
+			this.initialized = true
 			this.bufferedMessage.forEach((message) => {
 				this.socket.send(JSON.stringify(message))
 			})
 		}
 		this.socket.addEventListener("message", (data: any) => {
-			console.log(data)
 			this.handleIncomingData(JSON.parse(data.data.toString()))
 		})
 	}
