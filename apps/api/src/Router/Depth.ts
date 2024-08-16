@@ -10,7 +10,7 @@ const redis = RedisManager.getInstance()
 // }
 
 depthRouter.get("/", async (req, res) => {
-    const { clientId, symbol } = req.body
+    const { clientId, symbol } = req.query as { clientId: string, symbol: string }
     const payload: Omit<requestPayload, "id"> = {
         message: {
             Action: "GET_DEPTH",

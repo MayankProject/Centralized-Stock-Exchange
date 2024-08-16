@@ -1,6 +1,6 @@
 import RedisManager from "../RedisManager";
-import { Orderbook, quoteAsset, updatedDepthParams } from "./Orderbook";
-import { Balance, side, order, requestPayload } from "@repo/types/index"
+import { Orderbook, quoteAsset } from "./Orderbook";
+import { Balance, side, order, requestPayload, DepthResponse, OrderResponse } from "@repo/types/index"
 
 export class Engine {
     private orderBooks: Map<string, Orderbook> = new Map()
@@ -39,9 +39,14 @@ export class Engine {
     }
     fillDummyData() {
         const TEST_INR_ORDERBOOK = new Orderbook("TEST");
+        const TATA_INR_ORDERBOOK = new Orderbook("TATA");
         this.balances.set("1", {
             balance: {
                 available: 6000,
+                locked: 0
+            },
+            "TATA": {
+                available: 30,
                 locked: 0
             },
             "TEST": {
@@ -54,6 +59,10 @@ export class Engine {
                 available: 4000,
                 locked: 0
             },
+            "TATA": {
+                available: 10,
+                locked: 0
+            },
             "TEST": {
                 available: 10,
                 locked: 0
@@ -62,6 +71,10 @@ export class Engine {
         this.balances.set("3", {
             balance: {
                 available: 4000,
+                locked: 0
+            },
+            "TATA": {
+                available: 10,
                 locked: 0
             },
             "TEST": {
@@ -74,14 +87,20 @@ export class Engine {
                 available: 4000,
                 locked: 0
             },
+            "TATA": {
+                available: 10, locked: 0
+            },
             "TEST": {
-                available: 10,
-                locked: 0
+                available: 10, locked: 0
             }
         })
         this.balances.set("5", {
             balance: {
                 available: 4000,
+                locked: 0
+            },
+            "TATA": {
+                available: 10,
                 locked: 0
             },
             "TEST": {
@@ -90,6 +109,7 @@ export class Engine {
             }
         })
         this.orderBooks.set("TEST_INR", TEST_INR_ORDERBOOK);
+        this.orderBooks.set("TATA_INR", TATA_INR_ORDERBOOK);
     }
     createOrder({ clientId, amount, quantity, side, symbol }: {
         clientId: string,
@@ -97,7 +117,7 @@ export class Engine {
         quantity: number,
         side: side,
         symbol: string // TEST_INR
-    }) {
+    }): OrderResponse {
         const orderBook = this.orderBooks.get(symbol);
         if (!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
 
@@ -128,6 +148,12 @@ export class Engine {
             })
             if (side == "bid") {
                 User.balance.locked -= executedQuantity * amount;
+                if (!User[symbol.split("_")[0] as string]) {
+                    User[symbol.split("_")[0] as string] = {
+                        available: 0,
+                        locked: 0
+                    }
+                }
                 User[symbol.split("_")[0] as string].available += executedQuantity
                 this.balances.set(clientId, User)
                 fills.forEach((fill) => {
@@ -160,7 +186,7 @@ export class Engine {
             }
             // logic to send data here and there
             updatedDepthParams.s = symbol
-            this.publishUpdatedDepth(`trade@${symbol}`, updatedDepthParams)
+            this.publishUpdatedDepth(`depth@${symbol}`, updatedDepthParams)
             // TODO:  Have to register trades and publish to Pub Sub
             return {
                 fills: fills.map((fill) => {
@@ -176,7 +202,7 @@ export class Engine {
         }
     }
 
-    publishUpdatedDepth(stream: string, updatedDepthParams: updatedDepthParams) {
+    publishUpdatedDepth(stream: string, updatedDepthParams: DepthResponse) {
         // problem => bids: [[100, 0], [100, 0]]
         const accumulatedData: { bids: { [key: number]: number }, asks: { [key: number]: number } } = {
             bids: {},
@@ -213,7 +239,7 @@ export class Engine {
             throw new Error("No User Found!")
         }
         let accumulatedAvailableQuantity
-        const updatedDepthParams: updatedDepthParams = { e: "DEPTH", s: symbol, bids: [], asks: [] }
+        const updatedDepthParams: DepthResponse = { e: "DEPTH", s: symbol, bids: [], asks: [] }
         switch (order.side) {
             case "bid":
                 accumulatedAvailableQuantity = orderBook.bids.filter(e => e.amount === order.amount).reduce((sum, next) => sum + next.quantity, 0)
@@ -226,7 +252,7 @@ export class Engine {
                 this.UnlockAsset(User, symbol.split("_")[0], order.quantity, clientId)
                 break
         }
-        this.publishUpdatedDepth(`trade@${symbol}`, updatedDepthParams)
+        this.publishUpdatedDepth(`depth@${symbol}`, updatedDepthParams)
     }
 
     getDepth(symbol: string) {

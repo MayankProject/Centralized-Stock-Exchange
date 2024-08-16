@@ -1,111 +1,106 @@
+import { useEffect, useState } from "react"
+import { DepthResponse } from "@repo/types"
+import { getDepth } from "../utils"
+import { useRecoilValue } from "recoil"
+import { symbol, user } from "../state"
+import { WebSocketManager } from "../utils/WebSocketManager"
+function TwoDArrayToObject(arr: [number, number][]) {
+    return arr.reduce((acc: { [key: string]: string }, [key, value]) => {
+        acc[String(key)] = String(value);
+        return acc;
+    }, {})
+}
 export default function() {
+    const [Depth, setDepth] = useState<DepthResponse>({ e: "DEPTH", s: "", bids: [], asks: [] })
+    const userId = useRecoilValue(user)
+    const _symbol = useRecoilValue(symbol)
+    const depthUpdateCallback = (message: DepthResponse) => {
+        const { bids, asks } = { ...Depth }
+        console.log(bids, asks, Depth)
+        const UpdatedDepth = {
+            bids: TwoDArrayToObject(message.bids),
+            asks: TwoDArrayToObject(message.asks)
+        }
+        // Updating the existing ones
+        asks.forEach((ask) => {
+            if (UpdatedDepth.asks[ask[0]]) {
+                ask[1] = Number(UpdatedDepth.asks[ask[0]])
+                delete UpdatedDepth.asks[ask[0]]
+            }
+        })
+        bids.forEach((bid) => {
+            if (UpdatedDepth.bids[bid[0]]) {
+                bid[1] = Number(UpdatedDepth.bids[bid[0]])
+                delete UpdatedDepth.bids[bid[0]]
+            }
+        })
+        // Pushing the new ones
+        Object.entries(UpdatedDepth.asks).forEach(([price, quantity]) => {
+            asks.push([Number(price), Number(quantity)])
+        })
+        Object.entries(UpdatedDepth.bids).forEach(([price, quantity]) => {
+            bids.push([Number(price), Number(quantity)])
+        })
+
+        // Removing the empty ones
+        const _bids = bids.filter((a) => a[1] !== 0)
+        const _asks = asks.filter((a) => a[1] !== 0)
+
+        // Arranging in order
+        _bids.sort((a, b) => b[0] - a[0])
+        _asks.sort((a, b) => b[0] - a[0])
+        setDepth({ ...Depth, bids: _bids, asks: _asks })
+    }
+    useEffect(() => {
+        getDepth(userId, _symbol).then((response) => {
+            response.data.bids.sort((a, b) => b[0] - a[0])
+            response.data.asks.sort((a, b) => b[0] - a[0])
+            depthUpdateCallback(response.data)
+        })
+        WebSocketManager.getInstance().sendMessage({
+            method: "SUBSCRIBE",
+            params: [`depth@${_symbol}`]
+        })
+        WebSocketManager.getInstance().attachCallback("DEPTH", depthUpdateCallback)
+        return () => {
+            WebSocketManager.getInstance().sendMessage({
+                method: "UNSUBSCRIBE",
+                params: [`depth@${_symbol}`]
+            })
+        }
+    }, [])
     return (
-        <div className="Depth text-[12px]">
-            <div className="asks">
-                <div className="flex font-semibold justify-between mb-3">
-                    <h1>Price (INR) </h1>
-                    <h1 className="opacity-50">Size (TATA) </h1>
-                    <h1 className="opacity-50">TOTAL (TATA) </h1>
+        <div className="Depth text-[12px]" >
+            <div className="asks" >
+                <div className="flex font-semibold justify-between mb-3 mr-2" >
+                    <h1>Price(INR) </h1>
+                    < h1 className="opacity-50" > Size(TATA) </h1>
+                    < h1 className="opacity-50" > TOTAL(TATA) </h1>
                 </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[40%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">100.21</h1>
-                    <h1 className="">21.54</h1>
-                    <h1 className="">227.56</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[20%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">80.422</h1>
-                    <h1 className="">11.4</h1>
-                    <h1 className="">287.36</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[60%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">92.17</h1>
-                    <h1 className="">42.76</h1>
-                    <h1 className="">315.29</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[35%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">74.56</h1>
-                    <h1 className="">18.99</h1>
-                    <h1 className="">199.85</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[50%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">88.34</h1>
-                    <h1 className="">31.22</h1>
-                    <h1 className="">264.78</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[25%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">67.89</h1>
-                    <h1 className="">14.8</h1>
-                    <h1 className="">178.22</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[40%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">100.21</h1>
-                    <h1 className="">21.54</h1>
-                    <h1 className="">227.56</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[20%] h-full graph top-0 right-0 bg-[#291419] absolute"></div>
-                    <h1 className="text-[#fd4b4e]">80.422</h1>
-                    <h1 className="">11.4</h1>
-                    <h1 className="">287.36</h1>
-                </div>
+                {
+                    Depth.asks.map((ask) => {
+                        return ask.length ? <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between" >
+                            <div className="w-[40%] h-full graph top-0 right-0 bg-[#291419] absolute" > </div>
+                            < h1 className="text-[#fd4b4e]" > {ask[0]} </h1>
+                            < h1 className="" > {ask[1]} </h1>
+                            < h1 className="" > 227.56 </h1>
+                        </div> : ""
+                    })
+                }
             </div>
-            <h1 className="text-xl text-[#02a166] my-2 font-semibold">50.125</h1>
-            <div className="bids">
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[10%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">70.422</h1>
-                    <h1 className="">39.54</h1>
-                    <h1 className="">21.56</h1>
-                </div>
-                <div className="flex p-1 px-1 my-[2px] pl-0 relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[40%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">60.422</h1>
-                    <h1 className="">19.04</h1>
-                    <h1 className="">217.56</h1>
-                </div>
-                <div className="flex p-1 px-1 my-[2px] pl-0 relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[30%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">82.318</h1>
-                    <h1 className="">45.78</h1>
-                    <h1 className="">98.34</h1>
-                </div>
-                <div className="flex p-1 px-1 my-[2px] pl-0 relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[25%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">53.221</h1>
-                    <h1 className="">30.91</h1>
-                    <h1 className="">112.89</h1>
-                </div>
-                <div className="flex p-1 px-1 my-[2px] pl-0 relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[50%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">77.664</h1>
-                    <h1 className="">23.45</h1>
-                    <h1 className="">202.78</h1>
-                </div>
-                <div className="flex p-1 px-1 my-[2px] pl-0 relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[15%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">45.512</h1>
-                    <h1 className="">18.67</h1>
-                    <h1 className="">76.45</h1>
-                </div>
-                <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[10%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">70.422</h1>
-                    <h1 className="">39.54</h1>
-                    <h1 className="">21.56</h1>
-                </div>
-                <div className="flex p-1 px-1 my-[2px] pl-0 relative opacity-75 text-[13px] font-medium justify-between">
-                    <div className="w-[40%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute"></div>
-                    <h1 className="text-[#02a166]">60.422</h1>
-                    <h1 className="">19.04</h1>
-                    <h1 className="">217.56</h1>
-                </div>
+            < h1 className="text-xl text-[#02a166] my-2 font-semibold" > 50.125 </h1>
+            < div className="bids" >
+                {
+                    Depth.bids.map((bid) => {
+                        return bid.length ? <div className="flex p-1 px-1 pl-0 my-[2px] relative opacity-75 text-[13px] font-medium justify-between" >
+                            <div className="w-[10%] h-full graph top-0 right-0 bg-[#0d1d1b] absolute" > </div>
+                            < h1 className="text-[#02a166]" > {bid[0]} </h1>
+                            < h1 className="" > {bid[1]} </h1>
+                            < h1 className="" > 21.56 </h1>
+                        </div> : ""
+                    })
+                }
+
             </div>
         </div>
     )

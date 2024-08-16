@@ -50,3 +50,21 @@ export type requestPayload = {
     clientId: string,
     id?: string
 }
+export type DepthResponse = {
+    e: "DEPTH",
+    s: string,
+    bids: [number, number][],
+    asks: [number, number][]
+}
+export type createOrderAPI = {
+    side: "bid" | "ask",
+    amount: number,
+    quantity: number,
+    symbol: string,
+    clientId: string
+}
+export type OrderResponse = {
+    fills: Omit<fill, "clientId">[]
+    executedQuantity: number,
+    orderId: string
+}

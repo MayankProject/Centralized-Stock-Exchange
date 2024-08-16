@@ -1,10 +1,4 @@
-import { fill, order, side } from "@repo/types";
-export type updatedDepthParams = {
-        e: "DEPTH",
-        s: string,
-        bids: [number, number][],
-        asks: [number, number][]
-}
+import { DepthResponse, fill, order, side } from "@repo/types";
 export const quoteAsset = "INR"
 export class Orderbook {
         bids: order[];
@@ -18,7 +12,7 @@ export class Orderbook {
                 this.baseAsset = baseAsset
                 this.symbol = `${baseAsset}_${this.quoteAsset}`
         }
-        createOrder(order: order & { side: side }): { fills: fill[], executedQuantity: number, updatedDepthParams: updatedDepthParams } {
+        createOrder(order: order & { side: side }): { fills: fill[], executedQuantity: number, updatedDepthParams: DepthResponse } {
                 const { fills, executedQuantity, updatedDepthParams } = this.matchOrder({ ...order })
                 //Adding to OrderBook if not completely executed
                 let accumulatedQuantity
@@ -53,7 +47,7 @@ export class Orderbook {
         matchOrder(order: order & { side: side }): {
                 fills: fill[],
                 executedQuantity: number,
-                updatedDepthParams: updatedDepthParams
+                updatedDepthParams: DepthResponse
         } {
 
                 let { executedQuantity, fills }: { executedQuantity: number, fills: fill[] } = { executedQuantity: 0, fills: [] }
@@ -84,11 +78,11 @@ export class Orderbook {
                         updatedDepthParams
                 }
         }
-        compareOrderWithBook(book: order[], order: order & { side: side }, compare: (a: order, b: order) => boolean): { fills: fill[], executedQuantity: number, updatedDepthParams: updatedDepthParams } {
+        compareOrderWithBook(book: order[], order: order & { side: side }, compare: (a: order, b: order) => boolean): { fills: fill[], executedQuantity: number, updatedDepthParams: DepthResponse } {
                 // Matches the order with orderbook
                 let executedQuantity = 0
                 let fills: fill[] = []
-                const updatedDepthParams: updatedDepthParams = {
+                const updatedDepthParams: DepthResponse = {
                         e: "DEPTH",
                         s: "",
                         bids: [],
@@ -129,21 +123,20 @@ export class Orderbook {
         getDepth(data?: {
                 bids: order[],
                 asks: order[]
-        }) {
-                const depth: {
-                        bids: [number, number][],
-                        asks: [number, number][]
-                } = {
+        }): DepthResponse {
+                const depth: DepthResponse = {
+                        e: "DEPTH",
+                        s: this.symbol,
                         bids: [],
                         asks: []
                 }
-                const sortedBids = data?.bids || this.bids.sort((a, b) => a.amount - b.amount)
-                const sortedAsks = data?.asks || this.asks.sort((a, b) => b.amount - a.amount)
+                const sortedBids = data?.bids || this.bids.sort((a, b) => b.amount - a.amount)
+                const sortedAsks = data?.asks || this.asks.sort((a, b) => a.amount - b.amount)
                 let prev;
                 if (sortedAsks.length) for (let id = 0; id < sortedAsks.length; id++) {
                         const ask = sortedAsks[id];
                         if (prev && prev.amount === ask.amount) {
-                                depth.asks[id - 1] = [depth.asks[id - 1][0], depth.asks[id - 1][1] + ask.quantity];
+                                depth.asks[id - 1] = [depth.asks[depth.asks.length - 1][0], depth.asks[depth.asks.length - 1][1] + ask.quantity];
                                 continue
                         }
                         depth.asks.push([
@@ -156,7 +149,7 @@ export class Orderbook {
                 if (sortedBids.length) for (let id = 0; id < sortedBids.length; id++) {
                         const bid = sortedBids[id];
                         if (prev && prev.amount === bid.amount) {
-                                depth.bids[id - 1] = [depth.bids[id - 1][0], depth.bids[id - 1][1] + bid.quantity];
+                                depth.bids[id - 1] = [depth.bids[depth.bids.length - 1][0], depth.bids[depth.bids.length - 1][1] + bid.quantity];
                                 continue
                         }
                         depth.bids.push([
@@ -165,14 +158,6 @@ export class Orderbook {
                         prev = { ...bid }
                 }
                 return depth
-        }
-        getUpdatedDepth(data: updatedDepthParams) {
-                // const sortedBids = this.bids.filter(e => data.bids.includes(e.amount))
-                // const sortedAsks = this.asks.filter(e => data.asks.includes(e.amount))
-                // return this.getDepth({
-                //         bids: sortedBids,
-                //        asks: sortedAsks
-                // })
         }
         addToOrderBook(order: order, book: order[]) {
                 if (order.quantity) {
