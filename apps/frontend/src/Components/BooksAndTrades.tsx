@@ -1,6 +1,6 @@
 import Depth from "./Depth"
 import TradeList from "./TradeList"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 export default function() {
     const [Tab, setTab] = useState<"Book" | "Trade">("Book")
 
