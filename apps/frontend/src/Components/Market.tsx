@@ -15,11 +15,25 @@ function TwoDArrayToObject(arr: [number, number][]) {
     }, {})
 }
 
+function SubscribeUtilities(symbol: string, callbacks: { [key: string]: (arg0: any) => void }) {
+    WebSocketManager.getInstance().sendMessage({
+        method: "SUBSCRIBE",
+        params: [`depth@${symbol}`]
+    })
+    WebSocketManager.getInstance().sendMessage({
+        method: "SUBSCRIBE",
+        params: [`trade@${symbol}`]
+    })
+    for (const trigger in callbacks) {
+        WebSocketManager.getInstance().attachCallback(trigger, callbacks[trigger])
+    }
+}
+
 export default function() {
-
     const _symbol = useRecoilValue(symbol)
-
     const [Depth, setDepth] = useRecoilState(DepthState)
+    const [Trades, setTrades] = useRecoilState(TradesState)
+
     const depthUpdateCallback = (message: DepthResponse) => {
         const { bids, asks } = { ...Depth }
         const UpdatedDepth = {
@@ -57,28 +71,20 @@ export default function() {
         setDepth({ ...Depth, bids: _bids, asks: _asks })
     }
 
-    const DepthValue = useRecoilValue(DepthState)
-
-    const [Trades, setTrades] = useRecoilState(TradesState)
     function tradeUpdateCallback(data: TradeStreamResponse) {
         setTrades([{ amount: data.p, quantity: data.q }, ...Trades])
     }
 
     useEffect(() => {
         // Initiating the Existing Depth
-        depthUpdateCallback(DepthValue)
+        depthUpdateCallback(Depth)
 
-        WebSocketManager.getInstance().sendMessage({
-            method: "SUBSCRIBE",
-            params: [`depth@${_symbol}`]
-        })
-        WebSocketManager.getInstance().attachCallback("DEPTH", depthUpdateCallback)
+        const callBacks = {
+            "DEPTH": depthUpdateCallback,
+            "TRADE": tradeUpdateCallback
+        }
 
-        WebSocketManager.getInstance().sendMessage({
-            method: "SUBSCRIBE",
-            params: [`trade@${_symbol}`]
-        })
-        WebSocketManager.getInstance().attachCallback("TRADE", tradeUpdateCallback)
+        SubscribeUtilities(_symbol, callBacks)
 
         return () => {
             WebSocketManager.getInstance().sendMessage({

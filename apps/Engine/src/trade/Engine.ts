@@ -1,6 +1,6 @@
 import RedisManager from "../RedisManager";
 import { Orderbook, quoteAsset } from "./Orderbook";
-import { Balance, side, order, requestPayload, DepthResponse, OrderResponse, TradeStreamResponse } from "@repo/types/index"
+import { Balance, side, order, requestPayload, DepthResponse, OrderResponse, TradeStreamResponse, BalanceResponse } from "@repo/types/index"
 
 export class Engine {
     private orderBooks: Map<string, Orderbook> = new Map()
@@ -26,6 +26,14 @@ export class Engine {
                 this.cancelOrder({ ...message.Data, clientId });
                 response = {
                     message: "Order Cancelled"
+                }
+                break
+
+            case "GET_BALANCE":
+                response = {
+                    e: "BALANCE",
+                    id: message.Data.id,
+                    balance: this.balances.get(message.Data.id)?.balance.available
                 }
                 break
 
@@ -165,6 +173,11 @@ export class Engine {
                         User.balance.available += fill.quantity * fill.price;
                         User[symbol.split("_")[0] as string].locked -= fill.quantity
                         this.balances.set(fill.clientId, User)
+                        this.publishToBalance(`balance@${fill.clientId}`, {
+                            e: "BALANCE",
+                            balance: User.balance.available,
+                            id: fill.clientId
+                        })
                     }
                 })
             }
@@ -181,6 +194,11 @@ export class Engine {
                         User.balance.locked -= fill.quantity * fill.price;
                         User[symbol.split("_")[0] as string].available += fill.quantity
                         this.balances.set(fill.clientId, User)
+                        this.publishToBalance(`balance@${fill.clientId}`, {
+                            e: "BALANCE",
+                            balance: User.balance.available,
+                            id: fill.clientId
+                        })
                     }
                 })
             }
@@ -189,8 +207,13 @@ export class Engine {
             updatedDepthParams.s = symbol
             this.publishUpdatedDepth(`depth@${symbol}`, updatedDepthParams)
 
+            this.publishToBalance(`balance@${clientId}`, {
+                e: "BALANCE",
+                balance: User.balance.available,
+                id: clientId
+            })
+
             if (fills.length) {
-                console.log(fills)
                 const tradeStreamData: TradeStreamResponse = {
                     e: "TRADE",
                     s: symbol,
@@ -213,8 +236,10 @@ export class Engine {
             throw new Error("Insufficient Balance")
         }
     }
+    publishToBalance(stream: string, data: BalanceResponse) {
+        RedisManager.getInstance().publishToWs(stream, data)
+    }
     publishToTrade(stream: string, data: TradeStreamResponse) {
-        console.log(data)
         RedisManager.getInstance().publishToWs(stream, data)
     }
     publishUpdatedDepth(stream: string, updatedDepthParams: DepthResponse) {

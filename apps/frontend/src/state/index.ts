@@ -7,7 +7,7 @@ export const user = atom<{
 	key: 'textState', // unique ID (with respect to other atoms/selectors)
 	default: {
 		id: "1",
-		balance: 1000,
+		balance: 0,
 	},
 });
 export const symbol = atom<string>({

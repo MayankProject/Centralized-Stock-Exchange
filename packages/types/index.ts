@@ -29,6 +29,11 @@ export type messageFromAPI = {
     Data: {
         symbol: string
     }
+} | {
+    Action: "GET_BALANCE",
+    Data: {
+        id: string
+    }
 }
 export type order = {
     orderId: string,
@@ -66,6 +71,11 @@ export type DepthResponse = {
     s: string,
     bids: [number, number][],
     asks: [number, number][]
+}
+export type BalanceResponse = {
+    e: "BALANCE",
+    id: string,
+    balance: number
 }
 export type createOrderAPI = {
     side: "bid" | "ask",

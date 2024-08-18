@@ -14,17 +14,20 @@ export default class RedisManager {
                 }
                 return this.instance;
         }
-        connectToRedis = async function (this: RedisManager) {
+        connectToRedis = async function(this: RedisManager) {
                 await this.client.connect()
                 console.log("Redis Connected.")
         }
-        subscribe(market: string, manager: SubscriptionManager) {
-                this.client.subscribe(market, (message, channel) => {
+        subscribe(stream: string, manager: SubscriptionManager) {
+                if (stream.startsWith("balance")) {
+                        // Add Auth Checks
+                }
+                this.client.subscribe(stream, (message, channel) => {
                         manager.getSubscribedData(message, channel)
                 })
         }
-        unsubscribe(market: string) {
-                this.client.unsubscribe(market)
+        unsubscribe(stream: string) {
+                this.client.unsubscribe(stream)
         }
 
 }

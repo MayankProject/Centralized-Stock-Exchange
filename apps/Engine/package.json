@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "dev": "tsc -b && node dist"
+    "dev": "tsc -b && node dist",
+    "build": "turbo build"
   },
   "keywords": [],
   "author": "",
