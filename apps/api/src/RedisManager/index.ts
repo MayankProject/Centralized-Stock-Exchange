@@ -22,7 +22,7 @@ export default class RedisManager{
         const updatedPayload : requestPayload = {...payload, id}
         this.publisher.lPush("Process", JSON.stringify(updatedPayload))
         return new Promise((resolve)=>{
-            this.client.subscribe(id, (message, channel)=>{
+            this.client.subscribe(id, (message, channel) => {
                 this.client.unsubscribe(id)
                 resolve(JSON.parse(message))
             })

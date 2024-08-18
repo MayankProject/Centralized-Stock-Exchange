@@ -4,7 +4,6 @@ export class SubscriptionManager {
         private static instance: SubscriptionManager
         private Subscriptions = new Map<string, WebSocket[]> // stream -> User 
         private reverseSubscription = new Map<WebSocket, string[]> // User -> stream
-        private client = RedisManager.getInstance()
         private constructor() {
         }
         static getInstance() {
@@ -17,7 +16,7 @@ export class SubscriptionManager {
                 const streamSub = this.Subscriptions.get(stream) || []
                 const userSub = this.reverseSubscription.get(ws) || []
                 if (!(streamSub.length)) {
-                        this.client.subscribe(stream, SubscriptionManager.instance)
+                        RedisManager.getInstance().subscribe(stream, SubscriptionManager.instance)
                 }
                 this.Subscriptions.set(stream, [...streamSub, ws])
                 this.reverseSubscription.set(ws, [...userSub, stream])
@@ -26,7 +25,7 @@ export class SubscriptionManager {
                 const streamSub = this.Subscriptions.get(stream) || []
                 const userSub = this.reverseSubscription.get(ws) || []
                 if (streamSub.length === 1) {
-                        this.client.unsubscribe(stream)
+                        RedisManager.getInstance().unsubscribe(stream)
                 }
                 this.Subscriptions.set(stream, streamSub.filter(e => e !== ws))
                 this.reverseSubscription.set(ws, userSub.filter(e => e !== stream))

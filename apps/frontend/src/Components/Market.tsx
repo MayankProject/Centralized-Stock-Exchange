@@ -3,10 +3,11 @@ import Kline from "./Kline";
 import BooksAndTrades from "./BooksAndTrades";
 import MarketDetails from "./MarketDetails";
 import { WebSocketManager } from "../utils/WebSocketManager";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { DepthState, symbol, TradesState } from "../state";
-import { DepthResponse, TradeStreamResponse } from "@repo/types";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { DepthState, symbol, ticker, TradesState } from "../state";
+import { DepthResponse, tickerResponse, TradeStreamResponse } from "@repo/types";
 import { useEffect } from "react";
+import { getTicker } from "../utils";
 
 function TwoDArrayToObject(arr: [number, number][]) {
     return arr.reduce((acc: { [key: string]: string }, [key, value]) => {
@@ -16,6 +17,10 @@ function TwoDArrayToObject(arr: [number, number][]) {
 }
 
 function SubscribeUtilities(symbol: string, callbacks: { [key: string]: (arg0: any) => void }) {
+    WebSocketManager.getInstance().sendMessage({
+        method: "SUBSCRIBE",
+        params: [`ticker@${symbol}`]
+    })
     WebSocketManager.getInstance().sendMessage({
         method: "SUBSCRIBE",
         params: [`depth@${symbol}`]
@@ -33,7 +38,7 @@ export default function() {
     const _symbol = useRecoilValue(symbol)
     const [Depth, setDepth] = useRecoilState(DepthState)
     const [Trades, setTrades] = useRecoilState(TradesState)
-
+    const setTicker = useSetRecoilState(ticker)
     const depthUpdateCallback = (message: DepthResponse) => {
         const { bids, asks } = { ...Depth }
         const UpdatedDepth = {
@@ -71,6 +76,10 @@ export default function() {
         setDepth({ ...Depth, bids: _bids, asks: _asks })
     }
 
+    function tickerCallback(data: tickerResponse) {
+        console.log(data)
+        setTicker(data.price)
+    }
     function tradeUpdateCallback(data: TradeStreamResponse) {
         setTrades([{ amount: data.p, quantity: data.q }, ...Trades])
     }
@@ -78,10 +87,14 @@ export default function() {
     useEffect(() => {
         // Initiating the Existing Depth
         depthUpdateCallback(Depth)
-
+        getTicker(_symbol).then((data) => {
+            console.log(data)
+            setTicker(data.data.price)
+        })
         const callBacks = {
             "DEPTH": depthUpdateCallback,
-            "TRADE": tradeUpdateCallback
+            "TRADE": tradeUpdateCallback,
+            "TICKER": tickerCallback
         }
 
         SubscribeUtilities(_symbol, callBacks)

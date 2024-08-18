@@ -1,6 +1,6 @@
 import RedisManager from "../RedisManager";
 import { Orderbook, quoteAsset } from "./Orderbook";
-import { Balance, side, order, requestPayload, DepthResponse, OrderResponse, TradeStreamResponse, BalanceResponse } from "@repo/types/index"
+import { Balance, side, order, requestPayload, DepthResponse, OrderResponse, TradeStreamResponse, BalanceResponse, tickerResponse } from "@repo/types/index"
 
 export class Engine {
     private orderBooks: Map<string, Orderbook> = new Map()
@@ -34,6 +34,14 @@ export class Engine {
                     e: "BALANCE",
                     id: message.Data.id,
                     balance: this.balances.get(message.Data.id)?.balance.available
+                }
+                break
+
+            case "GET_TICKER":
+                response = {
+                    e: "TICKER",
+                    symbol: message.Data.symbol,
+                    price: this.orderBooks.get(message.Data.symbol)?.price
                 }
                 break
 
@@ -164,6 +172,11 @@ export class Engine {
                 }
                 User[symbol.split("_")[0] as string].available += executedQuantity
                 this.balances.set(clientId, User)
+                if (executedQuantity === quantity) {
+                    const grossPayedAmount = fills.reduce((gross, current) => gross + current.price, 0)
+                    User.balance.locked -= (priceToBuy - grossPayedAmount)
+                    User.balance.available += (priceToBuy - grossPayedAmount)
+                }
                 fills.forEach((fill) => {
                     const User = this.balances.get(fill.clientId)
                     if (fill.completed) {
@@ -202,24 +215,26 @@ export class Engine {
                     }
                 })
             }
-            // logic to send data here and there
-            //
             updatedDepthParams.s = symbol
             this.publishUpdatedDepth(`depth@${symbol}`, updatedDepthParams)
-
             this.publishToBalance(`balance@${clientId}`, {
                 e: "BALANCE",
                 balance: User.balance.available,
                 id: clientId
             })
-
             if (fills.length) {
+                orderBook.price = fills.slice(-1)[0].price
                 const tradeStreamData: TradeStreamResponse = {
                     e: "TRADE",
                     s: symbol,
                     p: String(fills.reduce((sum, fill) => sum + fill.price * fill.quantity, 0)),
                     q: String(executedQuantity)
                 }
+                this.publishToTicker(`trade@${symbol}`, {
+                    e: "TICKER",
+                    s: symbol,
+                    price: orderBook.price
+                })
                 this.publishToTrade(`trade@${symbol}`, tradeStreamData)
             }
 
@@ -235,6 +250,9 @@ export class Engine {
         else {
             throw new Error("Insufficient Balance")
         }
+    }
+    publishToTicker(stream: string, data: tickerResponse) {
+        RedisManager.getInstance().publishToWs(stream, data)
     }
     publishToBalance(stream: string, data: BalanceResponse) {
         RedisManager.getInstance().publishToWs(stream, data)

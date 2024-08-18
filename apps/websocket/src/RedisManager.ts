@@ -1,7 +1,6 @@
 import { createClient, RedisClientType } from "redis"
 import { SubscriptionManager } from "./SubscriptionManager";
 export default class RedisManager {
-
         private client: RedisClientType;
         private static instance: RedisManager;
         private constructor() {
@@ -31,3 +30,4 @@ export default class RedisManager {
         }
 
 }
+

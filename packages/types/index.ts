@@ -34,6 +34,11 @@ export type messageFromAPI = {
     Data: {
         id: string
     }
+} | {
+    Action: "GET_TICKER",
+    Data: {
+        symbol: string
+    }
 }
 export type order = {
     orderId: string,
@@ -60,6 +65,20 @@ export type Trade = {
     quantity: string
 }
 export type TradeApiResponse = Trade[]
+
+export type createOrderAPI = {
+    side: "bid" | "ask",
+    amount: number,
+    quantity: number,
+    symbol: string,
+    clientId: string
+}
+export type OrderResponse = {
+    fills: Omit<fill, "clientId">[]
+    executedQuantity: number,
+    orderId: string
+}
+// Engine to Pubsub
 export type TradeStreamResponse = {
     e: "TRADE",
     s: string,
@@ -77,15 +96,8 @@ export type BalanceResponse = {
     id: string,
     balance: number
 }
-export type createOrderAPI = {
-    side: "bid" | "ask",
-    amount: number,
-    quantity: number,
-    symbol: string,
-    clientId: string
-}
-export type OrderResponse = {
-    fills: Omit<fill, "clientId">[]
-    executedQuantity: number,
-    orderId: string
+export type tickerResponse = {
+    e: "TICKER",
+    s: string,
+    price: number
 }

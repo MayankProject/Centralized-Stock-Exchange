@@ -14,6 +14,10 @@ export const symbol = atom<string>({
 	key: "symbol",
 	default: "TATA_INR",
 })
+export const ticker = atom<number>({
+	key: "ticker",
+	default: Number((Math.random() * 100).toFixed(2))
+})
 const DepthData = selector({
 	key: "Depth Data",
 	get: async ({ get }: { get: GetRecoilValue }) => {

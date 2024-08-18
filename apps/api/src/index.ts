@@ -16,6 +16,21 @@ app.get("/", (_, res) => {
 
 app.use("/order", orderRouter)
 app.use("/depth", depthRouter)
+app.get("/ticker", async (req, res) => {
+    const { clientId, symbol } = req.query as { clientId: string, symbol: string }
+    const payload: Omit<requestPayload, "id"> = {
+        message: {
+            Action: "GET_TICKER",
+            Data: {
+                symbol
+            }
+        },
+        clientId
+    }
+    const response = await RedisManager.getInstance().pushAndWait(payload)
+    res.json(response)
+})
+
 app.get("/balance", async (req, res) => {
     const { clientId } = req.query as { clientId: string }
     const payload: Omit<requestPayload, "id"> = {
