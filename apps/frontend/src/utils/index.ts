@@ -27,6 +27,5 @@ export function getDepth(clientId: string, symbol: string): Promise<AxiosRespons
 }
 export async function createOrder(payload: createOrderAPI): Promise<OrderResponse> {
 	const { data } = await axios.post<OrderResponse>(`${API_URL}/order`, payload)
-	console.log(data, payload)
 	return data
 }
