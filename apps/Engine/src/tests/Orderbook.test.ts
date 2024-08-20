@@ -96,7 +96,6 @@ describe('Order Processing Tests', () => {
 
         it('should partially fill an order and update balances', () => {
             expect(Engine.getInstance().getBalance().get("1")?.balance.locked).toBe(900);
-
             Engine.getInstance().Process({
                 clientId: "3",
                 message: {
@@ -132,14 +131,13 @@ describe('Order Processing Tests', () => {
                     }
                 }
             });
-
             const balances = Engine.getInstance().getBalance();
 
-            expect(balances.get("3")?.balance.available).toBe(3530);
+            expect(balances.get("3")?.balance.available).toBe(3540);
             expect(balances.get("3")?.["TEST"].available).toBe(10.4);
 
             expect(balances.get("1")?.balance.available).toBe(5100);
-            expect(balances.get("1")?.balance.locked).toBe(370);
+            expect(balances.get("1")?.balance.locked).toBe(360);
             expect(balances.get("1")?.["TEST"].available).toBe(30.6);
         });
         it('should clear order', () => {
@@ -177,7 +175,7 @@ describe('Order Processing Tests', () => {
                 message: {
                     Action: "CREATE_ORDER",
                     Data: {
-                        amount: 500,
+                        amount: 400,
                         quantity: 1,
                         side: "ask" as side,
                         symbol: "TEST_INR"
@@ -186,7 +184,6 @@ describe('Order Processing Tests', () => {
             });
             expect(Engine.getInstance().getBalance().get("4")?.["TEST"].locked).toBe(1);
             expect(Engine.getInstance().getBalance().get("4")?.["TEST"].available).toBe(9);
-
             Engine.getInstance().Process({
                 clientId: "5",
                 message: {
@@ -202,13 +199,13 @@ describe('Order Processing Tests', () => {
             // Only One quantity gets satisfied
 
             const balances = Engine.getInstance().getBalance();
-            expect(balances.get("5")?.balance.available).toBe(3000);
+            expect(balances.get("5")?.balance.available).toBe(3100);
             expect(balances.get("5")?.balance.locked).toBe(500);
             expect(balances.get("5")?.["TEST"].available).toBe(11);
 
             expect(balances.get("4")?.["TEST"].available).toBe(9);
             expect(balances.get("4")?.["TEST"].locked).toBe(0);
-            expect(balances.get("4")?.balance.available).toBe(4500);
+            expect(balances.get("4")?.balance.available).toBe(4400);
         });
     });
 

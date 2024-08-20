@@ -13,10 +13,8 @@ const redis = RedisManager.getInstance()
 //       "symbol": "TEST_INR"
 //       "clientId": "1"
 // }
-
-
-orderRouter.post("/", async (req, res)=>{
-    const {side, amount, quantity, symbol, clientId} = req.body
+orderRouter.post("/", async (req, res) => {
+    const { side, amount, quantity, symbol, clientId } = req.body
     const payload: Omit<requestPayload, "id"> = {
         message: {
             Action: "CREATE_ORDER",
@@ -26,12 +24,14 @@ orderRouter.post("/", async (req, res)=>{
         },
         clientId
     }
+    // response from pubsub
     const response = await redis.pushAndWait(payload)
     res.json(response)
 })
-orderRouter.delete("/", async (req, res)=>{
-    const {orderId, symbol, clientId} = req.body
-    const payload : Omit<requestPayload, "id"> = {
+
+orderRouter.delete("/", async (req, res) => {
+    const { orderId, symbol, clientId } = req.body
+    const payload: Omit<requestPayload, "id"> = {
         message: {
             Action: "CANCEL_ORDER",
             Data: {

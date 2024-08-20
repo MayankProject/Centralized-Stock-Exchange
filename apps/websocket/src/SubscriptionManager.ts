@@ -2,8 +2,8 @@ import WebSocket from "ws"
 import RedisManager from "./RedisManager"
 export class SubscriptionManager {
     private static instance: SubscriptionManager
-    private Subscriptions = new Map<string, WebSocket[]> // stream -> User 
-    private reverseSubscription = new Map<WebSocket, string[]> // User -> stream
+    private Subscriptions = new Map<string, WebSocket[]> // stream -> User[] 
+    private reverseSubscription = new Map<WebSocket, string[]> // User -> stream[]
     private constructor() {
     }
     static getInstance() {
@@ -39,7 +39,6 @@ export class SubscriptionManager {
         this.reverseSubscription.delete(ws)
     }
     getSubscribedData(message: string, channel: string) {
-        console.log(message)
         const Users = this.Subscriptions.get(channel) || []
         for (let i = 0; i < Users.length; i++) {
             const User = Users[i]

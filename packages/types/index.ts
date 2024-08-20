@@ -1,14 +1,10 @@
 export type side = "bid" | "ask"
-export type Balance = {
-    balance: {
-        available: number,
-        locked: number
-    },
-    [key: string]: {
-        available: number,
-        locked: number
-    },
 
+// Payload to Push data from api server to queue 
+export type requestPayload = {
+    message: messageFromAPI,
+    clientId: string,
+    id?: string
 }
 export type messageFromAPI = {
     Action: "CREATE_ORDER",
@@ -40,13 +36,28 @@ export type messageFromAPI = {
         symbol: string
     }
 }
+
+// Types used in storing data in Engine
+export type Balance = {
+
+    // Quote Balance => INR
+    balance: {
+        available: number,
+        locked: number
+    },
+
+    // Stock Balance : "TATA" or "TEST"
+    [key: string]: {
+        available: number,
+        locked: number
+    },
+}
 export type order = {
     orderId: string,
     amount: number,
     quantity: number,
     clientId: string
 }
-
 export type fill = {
     orderId: string,
     price: number,
@@ -55,47 +66,60 @@ export type fill = {
     completed: boolean
 }
 
-export type requestPayload = {
-    message: messageFromAPI,
-    clientId: string,
-    id?: string
-}
-export type Trade = {
+// TODO: add a GET /trade endpoint ( Used just in frontend so far )
+export type TradeApiResponse = {
     amount: string,
     quantity: string
-}
-export type TradeApiResponse = Trade[]
+}[]
 
-export type createOrderAPI = {
+
+// Used In Frontend state types
+export type createOrderPayload = {
     side: "bid" | "ask",
     amount: number,
     quantity: number,
     symbol: string,
     clientId: string
 }
-export type OrderResponse = {
+
+
+// From Engine : 
+
+// To Api
+export type CreateOrderResponse = {
     fills: Omit<fill, "clientId">[]
     executedQuantity: number,
     orderId: string
 }
-// Engine to Pubsub
+
+// to Web Socket
 export type TradeStreamResponse = {
     e: "TRADE",
     s: string,
     p: string,
     q: string
 }
+
+// to both (Web Socket & API)
 export type DepthResponse = {
     e: "DEPTH",
     s: string,
+    
+    // bids : [price, quantity][]
     bids: [number, number][],
+
+    // asks : [price, quantity][] 
     asks: [number, number][]
 }
+
+// to both (Web Socket & API)
 export type BalanceResponse = {
     e: "BALANCE",
     id: string,
     balance: number
 }
+
+// to both (Web Socket & API)
 export type tickerResponse = {
     e: "TICKER",
     s: string,

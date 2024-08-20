@@ -1,4 +1,4 @@
-import { BalanceResponse, DepthResponse, OrderResponse, createOrderAPI, tickerResponse } from "@repo/types"
+import { BalanceResponse, DepthResponse, CreateOrderResponse, createOrderPayload, tickerResponse } from "@repo/types"
 import { AxiosResponse } from "axios"
 import axios from "axios"
 export const API_URL = "http://localhost:3000"
@@ -25,7 +25,7 @@ export function getDepth(clientId: string, symbol: string): Promise<AxiosRespons
 		}
 	})
 }
-export async function createOrder(payload: createOrderAPI): Promise<OrderResponse> {
-	const { data } = await axios.post<OrderResponse>(`${API_URL}/order`, payload)
+export async function createOrder(payload: createOrderPayload): Promise<CreateOrderResponse> {
+	const { data } = await axios.post<CreateOrderResponse>(`${API_URL}/order`, payload)
 	return data
 }

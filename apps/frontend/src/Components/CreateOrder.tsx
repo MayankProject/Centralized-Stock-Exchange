@@ -1,4 +1,4 @@
-import { createOrderAPI } from "@repo/types"
+import { createOrderPayload } from "@repo/types"
 import { useState } from "react"
 import { useRecoilValue } from "recoil"
 import { symbol, user } from "../state"
@@ -10,8 +10,7 @@ export default function() {
     const { id } = useRecoilValue(user)
     const _symbol = useRecoilValue(symbol)
     function makeOrder() {
-        console.log(id)
-        const payload: createOrderAPI = {
+        const payload: createOrderPayload = {
             clientId: id,
             symbol: _symbol,
             side: Tab === "Buy" ? "bid" : "ask",
