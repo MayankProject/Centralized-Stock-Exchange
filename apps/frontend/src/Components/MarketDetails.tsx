@@ -14,10 +14,10 @@ export default function() {
             </div>
             < div className="px-8" >
                 <div>
-                    <span className="font-medium text-[#fd4b4e] text-md" > {tickerValue} </span>
+                    <span className="font-medium text-[#fd4b4e] text-2xl" > {tickerValue} </span>
                 </div>
                 < div >
-                    <span className="text-white" > {tickerValue} </span>
+                    <span className="text-white" > ${tickerValue} </span>
                 </div>
             </div>
         </div>

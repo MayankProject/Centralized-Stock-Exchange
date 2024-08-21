@@ -116,7 +116,7 @@ export type DepthResponse = {
 export type BalanceResponse = {
     e: "BALANCE",
     id: string,
-    balance: number
+    balance: Balance
 }
 
 // to both (Web Socket & API)

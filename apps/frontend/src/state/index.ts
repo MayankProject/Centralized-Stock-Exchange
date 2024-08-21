@@ -1,13 +1,18 @@
-import { DepthResponse, TradeApiResponse } from "@repo/types";
+import { Balance, DepthResponse, TradeApiResponse } from "@repo/types";
 import { atom, GetRecoilValue, selector } from "recoil";
 import { getDepth } from "../utils";
 export const user = atom<{
-	id: string, balance: number
+	id: string, balance: Balance
 }>({
 	key: 'textState', // unique ID (with respect to other atoms/selectors)
 	default: {
 		id: "1",
-		balance: 0,
+		balance: {
+			balance: {
+				available: 0,
+				locked: 0
+			}
+		},
 	},
 });
 export const symbol = atom<string>({

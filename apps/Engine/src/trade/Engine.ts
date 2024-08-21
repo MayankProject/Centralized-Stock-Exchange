@@ -33,7 +33,7 @@ export class Engine {
                 response = {
                     e: "BALANCE",
                     id: message.Data.id,
-                    balance: this.balances.get(message.Data.id)?.balance.available
+                    balance: this.balances.get(message.Data.id)
                 }
                 break
 
@@ -140,7 +140,7 @@ export class Engine {
         /* Ensure 1. (if bid) User has more than or atleast equal amount of quote asset `available` than how much they are willing to pay
                   2. (if ask) User has more than or atleast equal base asset `available` than how much they want to ask for */
         if ((side === "bid" && (User.balance.available || 0) >= TotalPrice) ||
-            (side === "ask" && User[symbol.split("_")[0]].available || 0 >= quantity)) {
+            (side === "ask" && (User[symbol.split("_")[0]].available || 0) >= quantity)) {
 
             // Locking Balances
             if (side === "bid") {
@@ -163,7 +163,7 @@ export class Engine {
             this.publishUpdatedDepth(symbol, updatedDepthParams)
             this.publishToBalance(clientId, {
                 e: "BALANCE",
-                balance: User.balance.available,
+                balance: User,
                 id: clientId
             })
 
@@ -291,7 +291,7 @@ export class Engine {
                     this.balances.set(fill.clientId, filler)
                     this.publishToBalance(fill.clientId, {
                         e: "BALANCE",
-                        balance: filler.balance.available,
+                        balance: filler,
                         id: fill.clientId
                     })
                 }
@@ -313,7 +313,7 @@ export class Engine {
                     this.balances.set(fill.clientId, filler)
                     this.publishToBalance(fill.clientId, {
                         e: "BALANCE",
-                        balance: filler.balance.available,
+                        balance: filler,
                         id: fill.clientId
                     })
                 }

@@ -4,6 +4,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "docker-compose up -d && turbo dev",
+    "market": "cd apps/mm && npm run start",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },

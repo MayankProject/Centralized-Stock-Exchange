@@ -6,6 +6,7 @@ import { createOrder } from "../utils"
 export default function() {
     const [Tab, setTab] = useState<"Buy" | "Sell">("Buy")
     const [quantity, setQuantity] = useState<number>(0)
+    const User = useRecoilValue(user)
     const [amount, setAmount] = useState<number>(0)
     const { id } = useRecoilValue(user)
     const _symbol = useRecoilValue(symbol)
@@ -49,7 +50,7 @@ export default function() {
                         Available Balance
                     </div>
                     < div className="text-white" >
-                        0.00 SOL
+                        {User.balance["TATA"] && User.balance["TATA"].available.toFixed(2)} TATA
                     </div>
                 </div>
                 < div className="my-4" >

@@ -2,7 +2,7 @@ import { DepthResponse, fill, order, side } from "@repo/types";
 import assert from "assert"
 export const quoteAsset = "INR"
 export class Orderbook {
-    
+
     bids: order[];
     asks: order[];
     price: number = 0
@@ -23,7 +23,7 @@ export class Orderbook {
         const { fills, executedQuantity, updatedDepthParams } = this.matchOrder({ ...order })
 
         let accumulatedQuantity
-        
+
         // Adding to OrderBook if not completely executed
         if (executedQuantity < order.quantity) {
             switch (order.side) {
@@ -60,7 +60,7 @@ export class Orderbook {
 
         // Asks will be arranged in ascending order and bids will be arranged in descending.
         const book = order.side === "bid" ? this.asks.sort((a, b) => a.amount - b.amount) : this.bids.sort((a, b) => b.amount - a.amount)
-        
+
         switch (order.side) {
             case "bid":
                 for (let index = 0; index < book.length; index++) {
@@ -108,20 +108,19 @@ export class Orderbook {
                 }
                 break;
         }
-        console.log(fills, executedQuantity, updatedDepthParams)
         return {
             fills,
             executedQuantity,
             updatedDepthParams
         }
     }
-    
+
     cancelOrder(orderId: string) {
         const index = this.bids.findIndex(o => o.orderId === orderId)
         if (index === -1) {
             const index = this.asks.findIndex(o => o.orderId === orderId)
             assert(index !== -1, "No Order Found!")
-            
+
             const order = { ...this.asks[index], side: "ask" as side }
             this.asks.splice(index, 1)
             return order

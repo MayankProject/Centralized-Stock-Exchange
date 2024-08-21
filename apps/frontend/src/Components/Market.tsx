@@ -37,7 +37,7 @@ function SubscribeUtilities(symbol: string, callbacks: { [key: string]: (arg0: a
 export default function() {
     const _symbol = useRecoilValue(symbol)
     const [Depth, setDepth] = useRecoilState(DepthState)
-    const [Trades, setTrades] = useRecoilState(TradesState)
+    const [_, setTrades] = useRecoilState(TradesState)
     const setTicker = useSetRecoilState(ticker)
     const depthUpdateCallback = (message: DepthResponse) => {
         const { bids, asks } = { ...Depth }
@@ -77,11 +77,10 @@ export default function() {
     }
 
     function tickerCallback(data: tickerResponse) {
-        console.log(data)
         setTicker(data.price)
     }
     function tradeUpdateCallback(data: TradeStreamResponse) {
-        setTrades([{ amount: data.p, quantity: data.q }, ...Trades])
+        setTrades(prev => [{ amount: data.p, quantity: data.q }, ...prev])
     }
 
     useEffect(() => {
@@ -112,20 +111,20 @@ export default function() {
     }, [symbol])
 
     return (
-        <div className= "flex h-full" >
-        <div className="w-[75%] h-full border-b border-gray-800" >
-            {/* -- Details Nav --  */ }
-            < MarketDetails />
-            {/* -- Kline and Books Trades Tab -- */ }
-            < div className = "w-full flex border border-gray-800" >
-                <div className="Chart flex-1" >
-                    <Kline />
+        <div className="flex h-full" >
+            <div className="w-[75%] h-full border-b border-gray-800" >
+                {/* -- Details Nav --  */}
+                < MarketDetails />
+                {/* -- Kline and Books Trades Tab -- */}
+                < div className="w-full flex border border-gray-800" >
+                    <div className="Chart flex-1" >
+                        <Kline />
                     </div>
-    {/* -- Books Trades Tabs --  */ }
-    <BooksAndTrades />
-        </div>
-        </div >
-        < CreateOrder />
+                    {/* -- Books Trades Tabs --  */}
+                    <BooksAndTrades />
+                </div>
+            </div >
+            < CreateOrder />
         </div >
     )
 }

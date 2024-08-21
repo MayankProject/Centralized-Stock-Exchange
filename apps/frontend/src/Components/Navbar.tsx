@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useRecoilState, useRecoilValue } from "recoil"
+import { useRecoilState } from "recoil"
 import { user } from "../state"
 import { WebSocketManager } from "../utils/WebSocketManager"
 import { BalanceResponse } from "@repo/types"
@@ -81,7 +81,7 @@ export default function Navbar() {
                 </div>
                 < div className="partition h-full w-[1px] bg-[#02a166]" > </div>
                 < div className="text-[#02a166] transition-[2s] amount text-2xl" >
-                    ${currentUser.balance}
+                    ${currentUser.balance.balance && currentUser.balance.balance.available.toFixed(2)}
                 </div>
             </div>
             < div className="relative" >
