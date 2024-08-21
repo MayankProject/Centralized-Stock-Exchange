@@ -45,6 +45,14 @@ To get your development environment up and running, follow these steps:
 
    This command will initiate the application, allowing you to interact with the stock exchange simulation.
 
+4. **Run the market makers simulator**
+
+   Start the market maker simulator by executing:
+
+   ```bash
+   npm run market
+   ```
+
 ## Features
 
 - **Real-time Trading**: Engage in trading activities with real-time updates.
