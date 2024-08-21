@@ -134,13 +134,13 @@ export class Engine {
         const User = this.balances.get(clientId)
         assert(User, "User Not Found!")
 
-        const TotalPrice : number = amount * quantity
-        const Market : string = symbol.split("_")[0]
+        const TotalPrice: number = amount * quantity
+        const Market: string = symbol.split("_")[0]
 
         /* Ensure 1. (if bid) User has more than or atleast equal amount of quote asset `available` than how much they are willing to pay
                   2. (if ask) User has more than or atleast equal base asset `available` than how much they want to ask for */
-        if ( (side === "bid" && User.balance.available || 0 >= TotalPrice) || 
-             (side === "ask" && User[symbol.split("_")[0]].available || 0 >= quantity)) {
+        if ((side === "bid" && (User.balance.available || 0) >= TotalPrice) ||
+            (side === "ask" && User[symbol.split("_")[0]].available || 0 >= quantity)) {
 
             // Locking Balances
             if (side === "bid") {
@@ -166,22 +166,24 @@ export class Engine {
                 balance: User.balance.available,
                 id: clientId
             })
-            
+
             // Publishing into trade and ticker stream if any trade took place
             if (fills.length) {
                 orderBook.price = fills.slice(-1)[0].price
-                const tradeStreamData: TradeStreamResponse = {
-                    e: "TRADE",
-                    s: symbol,
-                    p: String(fills.reduce((sum, fill) => sum + fill.price * fill.quantity, 0)),
-                    q: String(executedQuantity)
-                }
                 this.publishToTicker(symbol, {
                     e: "TICKER",
                     s: symbol,
                     price: orderBook.price
                 })
-                this.publishToTrade(symbol, tradeStreamData)
+                fills.forEach((fill) => {
+                    const tradeStreamData: TradeStreamResponse = {
+                        e: "TRADE",
+                        s: symbol,
+                        p: String(fill.price),
+                        q: String(executedQuantity)
+                    }
+                    this.publishToTrade(symbol, tradeStreamData)
+                })
             }
 
             return {
@@ -206,7 +208,7 @@ export class Engine {
     }) {
         const orderBook = this.orderBooks.get(symbol);
         if (!orderBook) throw new Error(`No order book found for symbol ${symbol}`);
-        
+
         const User = this.balances.get(clientId)
         assert(User, "User Not Found!")
 
@@ -240,7 +242,7 @@ export class Engine {
     getBalance() {
         return this.balances
     }
-    handleBalances(side: side, User: Balance, executedQuantity: number, symbol: string, amount: number, clientId: string, quantity: number, fills: fill[], TotalPrice: number, orderBook: Orderbook){
+    handleBalances(side: side, User: Balance, executedQuantity: number, symbol: string, amount: number, clientId: string, quantity: number, fills: fill[], TotalPrice: number, orderBook: Orderbook) {
         /* 
             After the Matching with orderbook will be done  one of three things will happen
             1. The order will not execute at all and will sit on the orderbook till some other comes and rescue it.
@@ -258,7 +260,7 @@ export class Engine {
         const UserQuoteBalance = User.balance // "INR" -> {"available" : number, "locked": number}
         const UserBaseAsset = User[symbol.split("_")[0] as string] // TATA -> {"available" : number, "locked": number}
 
-        if (side == "bid") {    
+        if (side == "bid") {
 
             // Initializing Base Asset Only if it's User's the first time trading in this particular baseAsset 
             if (!UserBaseAsset) {
