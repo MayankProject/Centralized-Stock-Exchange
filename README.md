@@ -1,4 +1,6 @@
 # Centralized Stock Exchange
+![image](https://github.com/user-attachments/assets/3ddbb8e0-9f70-4c06-9b4c-5540b54388b9)
+
 
 ## Overview
 
